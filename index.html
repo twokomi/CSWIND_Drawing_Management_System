@@ -3352,23 +3352,49 @@
             
             // 🔥 시스템 등록 섹션 표시/숨김
             const systemRegisterSection = document.getElementById('system-register-section-sales');
+            const systemRegisteredCompleteDiv = document.getElementById('system-registered-complete-message');
+            
             if (systemRegisterSection) {
+                // 시스템 등록 완료 메시지 영역이 없으면 생성
+                if (!systemRegisteredCompleteDiv) {
+                    const completeDiv = document.createElement('div');
+                    completeDiv.id = 'system-registered-complete-message';
+                    completeDiv.className = 'bg-green-50 border-2 border-green-200 rounded-lg p-6 mb-6 hidden';
+                    systemRegisterSection.parentNode.insertBefore(completeDiv, systemRegisterSection);
+                }
+                
+                const completeMsg = document.getElementById('system-registered-complete-message');
+                
+                console.log('🔍 프로젝트 시스템 등록 상태 체크:', {
+                    projectId: project.id,
+                    projectName: project.name,
+                    systemRegistered: project.systemRegistered,
+                    bomAnalyzed: project.bomAnalyzed,
+                    drawingLinked: project.drawingLinked
+                });
+                
                 if (project.systemRegistered) {
-                    // ✅ 시스템 등록 완료 → 완료 메시지 표시
-                    systemRegisterSection.innerHTML = `
-                        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center">
+                    // ✅ 시스템 등록 완료 → 완료 메시지 표시, 등록 섹션 숨김
+                    console.log('✅ 시스템 등록 완료 상태 - 완료 메시지 표시');
+                    completeMsg.innerHTML = `
+                        <div class="text-center">
                             <i class="fas fa-check-circle text-green-600 text-4xl mb-3"></i>
                             <h3 class="text-xl font-bold text-green-800 mb-2">시스템 등록 완료</h3>
                             <p class="text-gray-600">이 프로젝트는 이미 시스템에 등록되었습니다.</p>
-                            <p class="text-sm text-gray-500 mt-2">등록일시: ${project.registeredDate || '정보 없음'}</p>
+                            <p class="text-sm text-gray-500 mt-2">등록일시: ${project.systemRegisteredAt || project.registeredDate || '정보 없음'}</p>
                         </div>
                     `;
-                    systemRegisterSection.classList.remove('hidden');
+                    completeMsg.classList.remove('hidden');
+                    systemRegisterSection.classList.add('hidden');
                 } else if (project.bomAnalyzed && project.drawingLinked) {
                     // BOM + 드로잉 완료했지만 시스템 미등록 → 등록 버튼 표시
+                    console.log('⏳ 시스템 등록 대기 상태 - 등록 버튼 표시');
+                    completeMsg.classList.add('hidden');
                     systemRegisterSection.classList.remove('hidden');
                 } else {
-                    // 그 외 경우 숨김
+                    // 그 외 경우 모두 숨김
+                    console.log('❌ 등록 조건 미충족 - 모두 숨김');
+                    completeMsg.classList.add('hidden');
                     systemRegisterSection.classList.add('hidden');
                 }
             }
