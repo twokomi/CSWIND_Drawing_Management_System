@@ -3318,9 +3318,14 @@
                 console.log('📦 저장된 BOM 데이터 불러오기:', project.bomData.length, '개 아이템');
                 salesBOMData = project.bomData;
                 
+                // BOM 계층 구조 재구성
+                buildBOMHierarchySales();
+                
                 // BOM 테이블 표시
                 displayBOMTableSales();
                 document.getElementById('basic-bom-analysis-section-sales').classList.remove('hidden');
+                
+                console.log('✅ BOM 테이블 표시 완료');
             } else {
                 console.log('⚠️ 저장된 BOM 데이터 없음 - 초기화');
                 salesBOMData = [];
@@ -3331,7 +3336,8 @@
             if (project.drawingPackage && Array.isArray(project.drawingPackage)) {
                 console.log('📄 저장된 드로잉 패키지 메타데이터:', project.drawingPackage.length, '개 파일');
                 // 드로잉 파일은 File 객체가 아니라 메타데이터만 저장되므로 실제 파일은 복원 불가
-                salesDrawingPackage = [];
+                // 메타데이터를 BOM 테이블에 반영
+                restoreDrawingPackageMetadata(project.drawingPackage);
             } else {
                 console.log('⚠️ 저장된 드로잉 패키지 없음');
                 salesDrawingPackage = [];
@@ -3340,8 +3346,19 @@
             // 🔥 시스템 등록 섹션 표시/숨김
             const systemRegisterSection = document.getElementById('system-register-section-sales');
             if (systemRegisterSection) {
-                if (project.bomAnalyzed && project.drawingLinked && !project.systemRegistered) {
-                    // BOM + 드로잉 완료했지만 시스템 미등록 → 표시
+                if (project.systemRegistered) {
+                    // ✅ 시스템 등록 완료 → 완료 메시지 표시
+                    systemRegisterSection.innerHTML = `
+                        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center">
+                            <i class="fas fa-check-circle text-green-600 text-4xl mb-3"></i>
+                            <h3 class="text-xl font-bold text-green-800 mb-2">시스템 등록 완료</h3>
+                            <p class="text-gray-600">이 프로젝트는 이미 시스템에 등록되었습니다.</p>
+                            <p class="text-sm text-gray-500 mt-2">등록일시: ${project.registeredDate || '정보 없음'}</p>
+                        </div>
+                    `;
+                    systemRegisterSection.classList.remove('hidden');
+                } else if (project.bomAnalyzed && project.drawingLinked) {
+                    // BOM + 드로잉 완료했지만 시스템 미등록 → 등록 버튼 표시
                     systemRegisterSection.classList.remove('hidden');
                 } else {
                     // 그 외 경우 숨김
@@ -3366,6 +3383,35 @@
                 drawingLinked: project.drawingLinked,
                 systemRegistered: project.systemRegistered
             });
+        }
+
+        // 드로잉 패키지 메타데이터 복원 함수
+        function restoreDrawingPackageMetadata(drawingMetadata) {
+            if (!drawingMetadata || !Array.isArray(drawingMetadata)) {
+                console.log('⚠️ 복원할 드로잉 메타데이터 없음');
+                return;
+            }
+            
+            console.log('📄 드로잉 메타데이터 복원 중:', drawingMetadata.length, '개 파일');
+            
+            // BOM 데이터에 드로잉 정보 매칭
+            drawingMetadata.forEach(meta => {
+                const bomNumber = meta.bomNumber;
+                
+                // salesBOMData에서 해당 번호를 가진 항목 찾기
+                const bomItem = salesBOMData.find(item => item.number === bomNumber);
+                
+                if (bomItem) {
+                    bomItem.hasDrawing = true;
+                    bomItem.drawingFileName = meta.fileName;
+                    console.log('✅ 드로잉 메타데이터 매칭:', bomNumber, '→', meta.fileName);
+                }
+            });
+            
+            // BOM 테이블 다시 렌더링하여 드로잉 정보 반영
+            displayBOMTableSales();
+            
+            console.log('✅ 드로잉 메타데이터 복원 완료');
         }
 
         // Sales팀 기능들
@@ -5485,7 +5531,11 @@
             const indent = '&nbsp;'.repeat(item.depth * 4);
             
             const drawingCell = item.hasDrawing ? 
-                `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>` :
+                (item.drawingFile ? 
+                    `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>` :
+                    (item.drawingFileName ? 
+                        `<span class="text-green-600 text-xs" title="${item.drawingFileName}">✓ ${item.drawingFileName.substring(0, 15)}...</span>` :
+                        `<span class="text-green-600 text-xs">✓ 연결됨</span>`)) :
                 '<span class="text-gray-400 text-xs">없음</span>';
             
             row.innerHTML = `

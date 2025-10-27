@@ -2,8 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'cswind-mto',
-      script: 'python3',
-      args: '-m http.server 3000',
+      script: 'server.js',
       env: {
         NODE_ENV: 'development',
         PORT: 3000
