@@ -3316,7 +3316,14 @@
             // 🔥 프로젝트별 BOM 데이터 불러오기
             if (project.bomData && Array.isArray(project.bomData)) {
                 console.log('📦 저장된 BOM 데이터 불러오기:', project.bomData.length, '개 아이템');
-                salesBOMData = project.bomData;
+                
+                // BOM 데이터 복원 및 초기화
+                salesBOMData = project.bomData.map(item => ({
+                    ...item,
+                    children: [], // children 배열 초기화
+                    parent: null, // parent 참조 초기화
+                    isVisible: item.depth === 0 || item.isVisible // depth 0은 항상 표시
+                }));
                 
                 // BOM 계층 구조 재구성
                 buildBOMHierarchySales();
