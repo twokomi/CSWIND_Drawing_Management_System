@@ -5,6 +5,7 @@
 
 ## 🌐 접속 URL
 - **개발 서버**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+- **프로젝트 관리 시스템**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai/project-manager.html
 
 ## ✅ 현재 완료된 기능 (Save Point 86 기준)
 
@@ -53,6 +54,8 @@
 ## 📁 파일 구조
 ```
 index.html              # 메인 CSWIND MTO 시스템
+project-manager.html    # 프로젝트 관리 시스템 (NEW)
+ecosystem.config.cjs    # PM2 서버 설정
 css/                    # 스타일시트 디렉토리
 js/                     # JavaScript 모듈 디렉토리
 supplier-portal.html    # 공급업체 포털 (별도)
@@ -117,7 +120,32 @@ window.drawingMap = new Map([
 
 ### 최신 수정 (2025-10-27)
 
-#### 1. Excel Depth 컬럼 파싱 오류 수정 ⭐ NEW
+#### 1. 프로젝트 관리 시스템 추가 ⭐ NEW
+- **새로운 페이지**: `project-manager.html` - 프로젝트 전처리 및 등록 워크플로우
+- **Step 1: 프로젝트 관리**
+  - 프로젝트명, 담당자, 고객사, 시작일/완료일 입력
+  - 필수 항목 검증
+- **Step 2: BOM 분석**
+  - Excel BOM 파일 업로드
+  - BOM 데이터 미리보기 기능
+  - 업로드 완료 시 자동 알림
+- **Step 3: 드로잉 패키지 업로드**
+  - 다중 PDF 파일 업로드 지원
+  - 업로드 완료 팝업 알림 ✨
+  - 도면링크 상태 자동 '완료' 변경 ✨
+- **Step 4: 시스템 등록**
+  - BOM 분석 + 도면 링크 완료 시 자동 활성화 ✨
+  - 프로젝트 등록 시 로컬 스토리지에 저장
+- **등록된 프로젝트 리스트**
+  - 모든 등록 프로젝트 목록 표시
+  - 프로젝트 클릭 시 전처리된 데이터 열기
+  - 상태 배지로 진행 상황 시각화 (완료/진행중/대기)
+- **사용자 경험 개선**
+  - 실시간 상태 업데이트
+  - 4단계 진행 상황 인디케이터
+  - 등록 완료 후 자동으로 프로젝트 리스트 탭으로 이동
+
+#### 2. Excel Depth 컬럼 파싱 오류 수정
 - **문제**: Excel 원본에서 Depth 값이 0~5로 다양하지만, 파싱 결과는 모두 0으로 표시되어 토글 기능이 작동하지 않음
 - **원인**: 하드코딩된 컬럼 인덱스(0번 컬럼)를 사용하여 Depth를 읽었으나, 실제 Excel에서는 Depth가 3번 컬럼에 위치
 - **해결**: 
