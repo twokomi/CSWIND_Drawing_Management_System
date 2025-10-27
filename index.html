@@ -5122,6 +5122,63 @@
                 console.log(`  ${index}번 컬럼: "${header}"`);
             });
             
+            // 🔍 헤더에서 필수 컬럼 위치 찾기
+            const columnMap = {
+                depth: -1,
+                bomCube: -1,
+                lev: -1,
+                findNumber: -1,
+                name: -1,
+                number: -1,
+                version: -1,
+                quantity: -1,
+                unit: -1,
+                weight: -1,
+                material: -1
+            };
+            
+            // 헤더 분석하여 컬럼 인덱스 저장
+            for (let col = 0; col < headerRow.length; col++) {
+                const header = (headerRow[col] || '').toString().trim().toLowerCase();
+                
+                if (header === 'depth') {
+                    columnMap.depth = col;
+                    console.log(`✅ Depth 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'bomcube') {
+                    columnMap.bomCube = col;
+                    console.log(`✅ BOMCube 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'lev') {
+                    columnMap.lev = col;
+                    console.log(`✅ Lev 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'findnumber' || header === 'find number') {
+                    columnMap.findNumber = col;
+                    console.log(`✅ FindNumber 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'name') {
+                    columnMap.name = col;
+                    console.log(`✅ Name 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'number' || header === 'part number') {
+                    columnMap.number = col;
+                    console.log(`✅ Number 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'version' || header === 'rev' || header === 'revision') {
+                    columnMap.version = col;
+                    console.log(`✅ Version 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'quantity' || header === 'qty') {
+                    columnMap.quantity = col;
+                    console.log(`✅ Quantity 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'unit' || header === 'uom') {
+                    columnMap.unit = col;
+                    console.log(`✅ Unit 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'weight') {
+                    columnMap.weight = col;
+                    console.log(`✅ Weight 컬럼 발견: ${col}번 컬럼`);
+                } else if (header === 'material') {
+                    columnMap.material = col;
+                    console.log(`✅ Material 컬럼 발견: ${col}번 컬럼`);
+                }
+            }
+            
+            console.log('📊 최종 컬럼 매핑:', columnMap);
+            
             // 🔍 각 행에서 정확한 컬럼 위치의 데이터 추출
             salesBOMData = [];
             
@@ -5131,55 +5188,73 @@
                 
                 console.log(`\n🔍 원본 행 ${i} 전체:`, row);
                 
-                // 🎯 사용자 피드백 기반 올바른 컬럼 매핑
-                // 기존 방식에서 Name과 FindNumber만 수정
-                const depthValue = row[0] || '';        // A열: Depth
+                // 🎯 헤더 기반 동적 컬럼 매핑
+                const depthValue = columnMap.depth >= 0 ? (row[columnMap.depth] || '') : (row[0] || '');
                 
-                // Name: Excel 헤더에서 정확히 "Name"이라고 되어있는 컬럼 찾기
+                // BOMCube에서 Name과 Number 추출
+                // BOMCube 형식: "GST08493-000/A;2-TowSct Tb TS162-01"
+                // → Number: GST08493-000, Version: A, Name: TowSct Tb TS162-01
+                const bomCubeValue = columnMap.bomCube >= 0 ? (row[columnMap.bomCube] || '') : '';
+                
                 let nameValue = '';
-                for (let col = 0; col < headerRow.length; col++) {
-                    const header = (headerRow[col] || '').toString().trim();
-                    if (header === 'Name') {
-                        nameValue = row[col] || '';
-                        console.log(`✅ Name 컬럼 발견: ${col}번 컬럼 (${header}) = "${nameValue}"`);
-                        break;
-                    }
-                }
-                // Name 컬럼을 찾지 못하면 기본값 사용 (기존 B열)
-                if (!nameValue) {
-                    nameValue = row[1] || '';
-                    console.log(`⚠️ Name 컬럼을 찾지 못해서 기본값 사용: "${nameValue}"`);
-                }
+                let numberValue = '';
+                let versionValue = '';
                 
-                const numberValue = row[5] || '';       // F열: Number (정상 - "GST03315-001")
-                const versionValue = row[9] || '';      // J열: Version (정상 - "A")
-                
-                // FindNumber: Excel 헤더에서 "FindNumber" 또는 유사한 이름 찾기
-                let findNumberValue = '';
-                
-                // Depth 0인 경우는 FindNumber를 빈칸으로 남겨두기
-                if (parseInt(depthValue) !== 0) {
-                    for (let col = 0; col < headerRow.length; col++) {
-                        const header = (headerRow[col] || '').toString().toLowerCase();
-                        if (header.includes('find') || header.includes('position') || header.includes('item') || header === 'findnumber') {
-                            findNumberValue = row[col] || '';
-                            console.log(`✅ FindNumber 컬럼 발견: ${col}번 컬럼 (${headerRow[col]}) = "${findNumberValue}"`);
-                            break;
+                if (bomCubeValue) {
+                    // BOMCube 파싱: "GST08493-000/A;2-TowSct Tb TS162-01"
+                    const parts = bomCubeValue.split(';');
+                    
+                    if (parts.length >= 2) {
+                        // Number와 Version: "GST08493-000/A"
+                        const numberPart = parts[0].trim();
+                        const slashIndex = numberPart.indexOf('/');
+                        
+                        if (slashIndex > 0) {
+                            numberValue = numberPart.substring(0, slashIndex).trim();
+                            versionValue = numberPart.substring(slashIndex + 1).trim();
+                        } else {
+                            numberValue = numberPart;
                         }
+                        
+                        // Name: "2-TowSct Tb TS162-01"에서 "2-" 제거
+                        const namePart = parts[1].trim();
+                        const dashIndex = namePart.indexOf('-');
+                        if (dashIndex > 0) {
+                            nameValue = namePart.substring(dashIndex + 1).trim();
+                        } else {
+                            nameValue = namePart;
+                        }
+                    } else {
+                        // 파싱 실패 시 전체를 Name으로
+                        nameValue = bomCubeValue;
                     }
-                    // 찾지 못했다면 기본값 사용
-                    if (!findNumberValue) {
-                        findNumberValue = row[3] || row[2] || '';
-                        console.log(`⚠️ FindNumber 컬럼을 찾지 못해서 기본값 사용: "${findNumberValue}"`);
-                    }
-                } else {
-                    console.log(`🔄 Depth 0 아이템이므로 FindNumber 빈칸 유지: "${depthValue}"`);
                 }
                 
-                const quantityValue = row[11] || '';    // L열: Quantity (정상)
-                const unitValue = row[12] || '';        // M열: Unit (정상)
-                const weightValue = row[13] || '';      // N열: Weight (정상)
-                const materialValue = row[14] || '';    // O열: Material (정상)
+                // Name 컬럼이 따로 있으면 우선 사용
+                if (columnMap.name >= 0 && row[columnMap.name]) {
+                    nameValue = row[columnMap.name];
+                }
+                
+                // Number 컬럼이 따로 있으면 우선 사용
+                if (columnMap.number >= 0 && row[columnMap.number]) {
+                    numberValue = row[columnMap.number];
+                }
+                
+                // Version 컬럼이 따로 있으면 우선 사용
+                if (columnMap.version >= 0 && row[columnMap.version]) {
+                    versionValue = row[columnMap.version];
+                }
+                
+                // FindNumber: 헤더에서 찾은 컬럼 사용
+                let findNumberValue = '';
+                if (parseInt(depthValue) !== 0 && columnMap.findNumber >= 0) {
+                    findNumberValue = row[columnMap.findNumber] || '';
+                }
+                
+                const quantityValue = columnMap.quantity >= 0 ? (row[columnMap.quantity] || '') : '';
+                const unitValue = columnMap.unit >= 0 ? (row[columnMap.unit] || '') : '';
+                const weightValue = columnMap.weight >= 0 ? (row[columnMap.weight] || '') : '';
+                const materialValue = columnMap.material >= 0 ? (row[columnMap.material] || '') : '';
                 
                 console.log(`📊 [행 ${i}] 사용자 피드백 반영 데이터 추출:`);
                 console.log(`  - Depth: "${depthValue}"`);
