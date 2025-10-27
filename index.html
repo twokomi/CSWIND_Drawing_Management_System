@@ -3105,10 +3105,17 @@
                             도면: ${bomNumber} (${fileName})
                         </h3>
                     </div>
-                    <div class="pdf-viewer-container" style="width: 100%; height: 80vh;">
-                        <iframe src="${pdfUrl}" 
+                    <div class="pdf-viewer-container" style="width: 100%; height: 80vh; background: #f3f4f6;">
+                        <iframe src="${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1" 
                                 style="width: 100%; height: 100%; border: none;"
                                 title="PDF 도면 뷰어">
+                            <p style="padding: 20px; text-align: center;">
+                                브라우저가 PDF를 표시할 수 없습니다. 
+                                <a href="${pdfUrl}" download="${fileName}" 
+                                   style="color: #2563eb; text-decoration: underline;">
+                                   여기를 클릭하여 다운로드
+                                </a>하세요.
+                            </p>
                         </iframe>
                     </div>
                     <div class="flex justify-end mt-4 space-x-2">
@@ -3125,6 +3132,7 @@
             `;
             
             document.body.appendChild(modal);
+            console.log(`✅ PDF 모달 표시: ${bomNumber} - ${fileName}`, { pdfUrl });
         }
         
         // PDF 모달 닫기
@@ -4764,13 +4772,30 @@
             title.textContent = `도면: ${item.drawingFile.name}`;
             
             const url = URL.createObjectURL(item.drawingFile);
-            body.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="600px">`;
+            
+            // iframe 방식으로 변경 (더 나은 호환성)
+            body.innerHTML = `
+                <div style="width: 100%; height: 600px; background: #f3f4f6;">
+                    <iframe src="${url}#toolbar=1&navpanes=1&scrollbar=1" 
+                            type="application/pdf" 
+                            width="100%" 
+                            height="100%" 
+                            style="border: none;">
+                        <p>브라우저가 PDF를 표시할 수 없습니다. 
+                           <a href="${url}" download="${item.drawingFile.name}" 
+                              class="text-blue-600 hover:underline">여기를 클릭하여 다운로드</a>하세요.
+                        </p>
+                    </iframe>
+                </div>
+            `;
             
             modal.classList.add('show');
             
             // 현재 PDF URL 저장 (다운로드용)
             window.currentPDFUrl = url;
             window.currentPDFName = item.drawingFile.name;
+            
+            console.log(`✅ PDF 모달 표시: ${item.drawingFile.name}`, { url, itemId });
         }
 
         // PDF 모달 닫기
