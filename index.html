@@ -3357,8 +3357,8 @@
             // 프로젝트 리스트에 추가
             salesProjectList.push(project);
             
-            // 로컬 스토리지에 저장
-            localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+            // 로컬 스토리지에 저장 (순환 참조 방지)
+            saveProjectListToStorage();
             
             // 리스트 업데이트
             updateProjectListDisplay();
@@ -3754,7 +3754,7 @@
                     createdAt: new Date().toISOString()
                 };
                 salesProjectList.push(debugProject);
-                localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+                saveProjectListToStorage();
                 console.log('✅ 디버깅용 프로젝트 생성 완료');
                 
                 // 6초 후 실제 Excel 형태의 데이터로 테스트
@@ -3967,7 +3967,7 @@
                     
                     // 로컬 스토리지 업데이트 (BOM 데이터 제외)
                     try {
-                        localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+                        saveProjectListToStorage();
                         console.log('✅ 프로젝트 정보 localStorage 저장 완료');
                     } catch (error) {
                         console.warn('⚠️ localStorage 저장 실패, 메모리 모드로 동작:', error.message);
@@ -5001,7 +5001,7 @@
             });
             
             // 로컬 스토리지 업데이트
-            localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+            saveProjectListToStorage();
             localStorage.setItem('cswind-prodtech-projects', JSON.stringify(window.prodTechProjects));
             
             // UI 업데이트
@@ -5097,7 +5097,7 @@
                     const projectIndex = salesProjectList.findIndex(p => p.id === selectedProjectForAnalysis.id);
                     if (projectIndex >= 0) {
                         salesProjectList[projectIndex] = selectedProjectForAnalysis;
-                        localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+                        saveProjectListToStorage();
                         updateProjectListDisplay();
                     }
                     
@@ -5867,7 +5867,7 @@
             const projectIndex = salesProjectList.findIndex(p => p.id === selectedProjectForAnalysis.id);
             if (projectIndex >= 0) {
                 salesProjectList[projectIndex] = selectedProjectForAnalysis;
-                localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+                saveProjectListToStorage();
                 updateProjectListDisplay();
             }
             
@@ -5922,6 +5922,54 @@
             if (infoDiv) infoDiv.classList.add('hidden');
         }
 
+        // BOM 데이터에서 순환 참조 제거 헬퍼 함수
+        function removeBOMCircularReferences(bomData) {
+            if (!bomData || !Array.isArray(bomData)) return null;
+            
+            return bomData.map(item => {
+                // 순환 참조가 있는 속성들 제외하고 복사
+                const cleanItem = {
+                    id: item.id,
+                    depth: item.depth,
+                    name: item.name,
+                    number: item.number,
+                    version: item.version,
+                    findNumber: item.findNumber,
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    weight: item.weight,
+                    material: item.material,
+                    isVisible: item.isVisible,
+                    hasDrawing: item.hasDrawing,
+                    drawingFileName: item.drawingFileName
+                };
+                
+                return cleanItem;
+            });
+        }
+
+        // 프로젝트 리스트를 localStorage에 안전하게 저장
+        function saveProjectListToStorage() {
+            try {
+                // 각 프로젝트의 bomData에서 순환 참조 제거
+                const cleanProjectList = salesProjectList.map(p => {
+                    const cleanProject = {...p};
+                    if (cleanProject.bomData && Array.isArray(cleanProject.bomData)) {
+                        cleanProject.bomData = removeBOMCircularReferences(cleanProject.bomData);
+                    }
+                    return cleanProject;
+                });
+                
+                localStorage.setItem('cswind-sales-projects', JSON.stringify(cleanProjectList));
+                console.log('✅ 프로젝트 리스트가 localStorage에 저장되었습니다.');
+                return true;
+            } catch (error) {
+                console.error('❌ localStorage 저장 오류:', error);
+                alert('프로젝트 저장 중 오류가 발생했습니다: ' + error.message);
+                return false;
+            }
+        }
+
         // 시스템 등록 함수
         function registerProjectToSystem() {
             console.log('🚀 프로젝트 시스템 등록 시작');
@@ -5954,7 +6002,11 @@
             // 프로젝트 상태 업데이트
             selectedProjectForAnalysis.systemRegistered = true;
             selectedProjectForAnalysis.systemRegisteredAt = new Date().toISOString();
-            selectedProjectForAnalysis.bomData = salesBOMData;
+            
+            // BOM 데이터에서 순환 참조 제거 후 저장
+            selectedProjectForAnalysis.bomData = removeBOMCircularReferences(salesBOMData);
+            
+            // 드로잉 패키지 정보 저장 (File 객체는 제외)
             selectedProjectForAnalysis.drawingPackage = salesDrawingPackage.map(f => ({
                 name: f.name,
                 size: f.size,
@@ -5965,7 +6017,11 @@
             const projectIndex = salesProjectList.findIndex(p => p.id === selectedProjectForAnalysis.id);
             if (projectIndex >= 0) {
                 salesProjectList[projectIndex] = selectedProjectForAnalysis;
-                localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+                
+                if (!saveProjectListToStorage()) {
+                    return;
+                }
+                
                 updateProjectListDisplay();
             }
             
