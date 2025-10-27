@@ -5231,6 +5231,23 @@
             document.body.removeChild(link);
         }
 
+        // 드로잉 파일 재업로드 안내 메시지
+        function showDrawingNotAvailableMessage(fileName, bomNumber) {
+            const message = `📄 드로잉 파일 정보\n\n` +
+                `파일명: ${fileName}\n` +
+                `BOM 번호: ${bomNumber}\n\n` +
+                `⚠️ 이 드로잉은 이전에 업로드되었지만, 브라우저 새로고침 또는\n` +
+                `프로젝트 재진입으로 인해 파일 객체가 손실되었습니다.\n\n` +
+                `💡 해결 방법:\n` +
+                `1. 프로젝트를 다시 선택하여 "BOM 분석 & 드로잉 업로드" 화면으로 이동\n` +
+                `2. 드로잉 패키지를 다시 업로드하여 파일 연결을 복원\n` +
+                `3. 업로드 후 다시 시도해주세요\n\n` +
+                `※ 드로잉 매칭 정보는 저장되어 있으므로 같은 파일을 다시 업로드하면\n` +
+                `   자동으로 연결됩니다.`;
+            
+            alert(message);
+        }
+
         // 시스템 등록 모달 표시
         function showSystemRegistrationModal(projectId) {
             const project = salesProjectList.find(p => p.id == projectId);
@@ -5793,13 +5810,35 @@
             
             const indent = '&nbsp;'.repeat(item.depth * 4);
             
-            const drawingCell = item.hasDrawing ? 
-                (item.drawingFile ? 
-                    `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>` :
-                    (item.drawingFileName ? 
-                        `<span class="text-green-600 text-xs" title="${item.drawingFileName}">✓ ${item.drawingFileName.substring(0, 15)}...</span>` :
-                        `<span class="text-green-600 text-xs">✓ 연결됨</span>`)) :
-                '<span class="text-gray-400 text-xs">없음</span>';
+            // 드로잉 셀 생성 로직
+            let drawingCell;
+            if (item.hasDrawing) {
+                if (item.drawingFile) {
+                    // 실제 파일 객체가 있는 경우 - "보기" 버튼 표시
+                    drawingCell = `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>`;
+                } else if (item.drawingFileName) {
+                    // 파일명만 있는 경우 - 재업로드 안내 버튼
+                    const safeFileName = item.drawingFileName.replace(/'/g, "\\'");
+                    drawingCell = `<button onclick="showDrawingNotAvailableMessage('${safeFileName}', '${item.number}')" class="text-amber-600 hover:text-amber-800 text-xs px-2 py-1 bg-amber-50 rounded hover:bg-amber-100" title="파일은 재업로드가 필요합니다">📄 ${item.drawingFileName.substring(0, 12)}...</button>`;
+                } else {
+                    // hasDrawing은 true인데 파일 정보가 없음
+                    drawingCell = `<span class="text-green-600 text-xs">✓ 연결됨</span>`;
+                }
+            } else {
+                // 드로잉 없음
+                drawingCell = '<span class="text-gray-400 text-xs">없음</span>';
+            }
+            
+            // 디버깅: 드로잉 상태 로그 (처음 3개 항목만)
+            if (item.number && salesBOMData.indexOf(item) < 3) {
+                console.log(`🔍 드로잉 셀 생성 (${item.number}):`, {
+                    hasDrawing: item.hasDrawing,
+                    hasDrawingFile: !!item.drawingFile,
+                    hasDrawingFileName: !!item.drawingFileName,
+                    drawingFileName: item.drawingFileName,
+                    cellHTML: drawingCell.substring(0, 50)
+                });
+            }
             
             row.innerHTML = `
                 <td class="px-2 py-2 border-r text-xs">${item.depth}</td>
