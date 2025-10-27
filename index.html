@@ -5757,10 +5757,13 @@
         
         // 드로잉 패키지 업로드 (완전한 버전)
         function uploadDrawingPackageSales() {
-            console.log('🚀 드로잉 패키지 업로드 및 BOM 매칭 시작');
+            console.log('🚀🚀🚀 드로잉 패키지 업로드 함수 시작됨!');
+            console.log('선택된 프로젝트:', selectedProjectForAnalysis);
+            console.log('BOM 데이터:', salesBOMData);
             
             // 선택된 프로젝트 확인
             if (!selectedProjectForAnalysis) {
+                console.error('❌ 선택된 프로젝트가 없음');
                 alert('먼저 프로젝트를 선택해주세요.');
                 return;
             }
@@ -5798,6 +5801,7 @@
             
             // 기존 matchDrawingsWithBOMSales 함수 사용
             let matchedCount = 0;
+            let totalBOMItems = 0;
             
             salesBOMData.forEach((bomItem, index) => {
                 if (!bomItem.number || bomItem.number === '') {
@@ -5807,6 +5811,9 @@
                     bomItem.drawingFileName = '';
                     return;
                 }
+                
+                // Number가 있는 항목만 카운트
+                totalBOMItems++;
                 
                 const bomNumber = bomItem.number.toString().trim();
                 console.log(`🔍 BOM 항목 ${index}: "${bomItem.name}" - Number: "${bomNumber}"`);
@@ -5866,16 +5873,36 @@
             
             // 🔥 결과 알림
             const successRate = totalBOMItems > 0 ? (matchedCount / totalBOMItems * 100).toFixed(1) : 0;
+            
+            console.log('📊 매칭 결과 준비됨:', {
+                totalPDFs: pdfFiles.length,
+                totalBOMItems: totalBOMItems,
+                matchedCount: matchedCount,
+                successRate: successRate
+            });
+            
             alert(`✅ 드로잉 패키지 업로드 완료!\n\n📊 매칭 결과:\n• 총 PDF 파일: ${pdfFiles.length}개\n• Number가 있는 BOM 항목: ${totalBOMItems}개\n• 매칭 성공: ${matchedCount}개\n• 성공률: ${successRate}%\n\n✨ 도면 링크 상태가 '완료'로 변경되었습니다.\n✨ 시스템 등록 섹션이 활성화되었습니다.\n\n매칭된 도면은 BOM 테이블에서 "보기" 버튼으로 확인할 수 있습니다.`);
+            
+            console.log('✅ 알림 팝업 표시 완료');
             
             // 시스템 등록 섹션 활성화
             const systemRegisterSection = document.getElementById('system-register-section-sales');
+            console.log('시스템 등록 섹션 엘리먼트:', systemRegisterSection);
+            
             if (systemRegisterSection) {
+                console.log('✅ 시스템 등록 섹션 활성화 중...');
                 systemRegisterSection.classList.remove('hidden');
-                systemRegisterSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // 스크롤 애니메이션
+                setTimeout(() => {
+                    systemRegisterSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    console.log('✅ 시스템 등록 섹션으로 스크롤 완료');
+                }, 100);
+            } else {
+                console.error('❌ 시스템 등록 섹션을 찾을 수 없음!');
             }
             
-            console.log(`✅ 드로잉 패키지 업로드 및 매칭 완료: ${matchedCount}/${totalBOMItems} (${successRate}%)`);
+            console.log(`✅✅✅ 드로잉 패키지 업로드 및 매칭 완료: ${matchedCount}/${totalBOMItems} (${successRate}%)`);
         }
 
         // 파일 정리 함수들
