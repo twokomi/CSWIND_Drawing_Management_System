@@ -9,14 +9,17 @@
 ## ✅ 현재 완료된 기능 (Save Point 86 기준)
 
 ### 1. BOM 데이터 처리 시스템 ✅
-- **Excel 헤더 분석 기반 컬럼 매핑**: 실제 Excel 구조를 분석하여 올바른 컬럼에서 데이터 추출
-- **정확한 컬럼 매핑**: 
-  - Depth → A열 (0번 컬럼)
-  - Name → Excel에서 "Name" 헤더를 찾아서 매핑
-  - Number → F열 (5번 컬럼) - 실제 도면번호 (GST03315-001, E0005030033 등)
-  - Version → J열 (9번 컬럼) 
-  - FindNumber → Excel에서 "FindNumber" 또는 유사 헤더를 찾아서 매핑 (depth 0에서는 빈값)
-  - Quantity, Unit, Weight, Material → 각각 올바른 컬럼에서 추출
+- **Excel 헤더 분석 기반 컬럼 매핑**: 실제 Excel 구조를 동적으로 분석하여 올바른 컬럼에서 데이터 추출
+- **지능형 컬럼 매핑**: 
+  - **Depth** → 헤더에서 'Depth' 컬럼 자동 감지 (컬럼 위치 무관)
+  - **BOMCube 파싱** → `Number/Version;Num-Name` 형식 자동 분리
+    - 예: `GST08493-000/A;2-TowSct Tb TS162-01` → Number: `GST08493-000`, Version: `A`, Name: `TowSct Tb TS162-01`
+  - **Name** → BOMCube에서 추출 또는 'Name' 헤더 컬럼 사용
+  - **Number** → BOMCube에서 추출 또는 'Number' 헤더 컬럼 사용
+  - **Version** → BOMCube에서 추출 또는 'Version'/'Rev' 헤더 컬럼 사용
+  - **FindNumber** → 'FindNumber' 헤더 자동 감지 (depth 0에서는 빈값)
+  - **Quantity, Unit, Weight, Material** → 각각 헤더에서 자동 감지
+- **유연한 구조 지원**: Excel 컬럼 순서 변경 시에도 자동 대응
 
 ### 2. FindNumber 로직 개선 ✅
 - **Depth 0 항목**: FindNumber 필드를 빈값으로 설정
@@ -114,7 +117,20 @@ window.drawingMap = new Map([
 
 ### 최신 수정 (2025-10-27)
 
-#### 1. BOM 트리 토글 기능 수정
+#### 1. Excel Depth 컬럼 파싱 오류 수정 ⭐ NEW
+- **문제**: Excel 원본에서 Depth 값이 0~5로 다양하지만, 파싱 결과는 모두 0으로 표시되어 토글 기능이 작동하지 않음
+- **원인**: 하드코딩된 컬럼 인덱스(0번 컬럼)를 사용하여 Depth를 읽었으나, 실제 Excel에서는 Depth가 3번 컬럼에 위치
+- **해결**: 
+  - Excel 헤더를 동적으로 분석하여 'Depth' 컬럼 자동 감지
+  - BOMCube 컬럼 파싱: `Number/Version;Num-Name` 형식 분리 (예: `GST08493-000/A;2-TowSct Tb TS162-01`)
+  - 모든 필수 컬럼(Depth, Name, Number, Version, FindNumber 등)을 헤더 기반으로 매핑
+  - 유연한 Excel 구조 지원: 컬럼 순서가 변경되어도 자동 대응
+- **결과**: 
+  - Depth 값이 정확히 파싱되어 BOM 트리 계층 구조 정상 표시
+  - 토글 기능 완전 복구: 각 레벨의 확장/축소 정상 작동
+  - Excel 구조 변경에 강건한 시스템 구축
+
+#### 2. BOM 트리 토글 기능 수정
 - **문제**: Depth에 따른 토글 아이콘이 클릭되지 않는 문제
 - **원인**: `innerHTML`로 생성된 `onclick` 속성이 제대로 바인딩되지 않음
 - **해결**: 
