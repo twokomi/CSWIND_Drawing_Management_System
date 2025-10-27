@@ -750,6 +750,9 @@
                             등록된 프로젝트 리스트
                         </h4>
                     <div class="flex items-center space-x-2">
+                        <button id="btn-delete-selected-projects" onclick="deleteSelectedProjects()" class="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-trash-alt mr-1"></i>선택 삭제 (<span id="selected-count">0</span>)
+                        </button>
                         <span id="project-count-sales" class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">0개</span>
                         <button onclick="refreshProjectListSales()" class="text-blue-600 hover:text-blue-800 transition-colors" title="목록 새로고침">
                             <i class="fas fa-sync-alt"></i>
@@ -761,6 +764,9 @@
                     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
                         <thead class="bg-gray-50">
                             <tr class="text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-2 border-r text-center">
+                                    <input type="checkbox" id="select-all-projects" onchange="toggleAllProjectSelection()" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" title="전체 선택/해제">
+                                </th>
                                 <th class="px-3 py-2 border-r text-center">번호</th>
                                 <th class="px-3 py-2 border-r">프로젝트명</th>
                                 <th class="px-3 py-2 border-r text-center">프로젝트 타입</th>
@@ -769,12 +775,13 @@
                                 <th class="px-3 py-2 border-r text-center">완료일</th>
                                 <th class="px-3 py-2 border-r text-center">BOM 분석</th>
                                 <th class="px-3 py-2 border-r text-center">도면 링크</th>
-                                <th class="px-3 py-2 text-center">시스템 등록</th>
+                                <th class="px-3 py-2 border-r text-center">시스템 등록</th>
+                                <th class="px-3 py-2 text-center">관리</th>
                             </tr>
                         </thead>
                         <tbody id="project-list-body-sales" class="bg-white divide-y divide-gray-200">
                             <tr id="no-projects-row">
-                                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                                <td colspan="11" class="px-6 py-8 text-center text-gray-500">
                                     <i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i>
                                     <p>등록된 프로젝트가 없습니다.</p>
                                     <p class="text-xs mt-1">위의 "+ 새 프로젝트" 버튼을 클릭하여 프로젝트를 생성해주세요.</p>
@@ -3569,6 +3576,12 @@
                         '<span class="text-gray-400"><i class="fas fa-minus mr-1"></i>미완료</span>');
                 
                 row.innerHTML = `
+                    <td class="px-3 py-2 border-r text-center">
+                        <input type="checkbox" class="project-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                               data-project-id="${project.id}" 
+                               onchange="updateDeleteButtonState()"
+                               onclick="event.stopPropagation()">
+                    </td>
                     <td class="px-3 py-2 border-r text-center text-sm font-medium">${project.number}</td>
                     <td class="px-3 py-2 border-r text-sm font-medium">${project.name}</td>
                     <td class="px-3 py-2 border-r text-center text-sm">${project.type}</td>
@@ -3577,12 +3590,23 @@
                     <td class="px-3 py-2 border-r text-center text-xs">${project.endDate}</td>
                     <td class="px-3 py-2 border-r text-center text-xs">${bomStatus}</td>
                     <td class="px-3 py-2 border-r text-center text-xs">${drawingStatus}</td>
-                    <td class="px-3 py-2 text-center text-xs">${systemButton}</td>
+                    <td class="px-3 py-2 border-r text-center text-xs">${systemButton}</td>
+                    <td class="px-3 py-2 text-center">
+                        <button onclick="editProject(${project.id}); event.stopPropagation();" 
+                                class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                title="프로젝트 수정">
+                            <i class="fas fa-edit"></i> 수정
+                        </button>
+                    </td>
                 `;
                 
                 // 더블클릭 이벤트 추가
                 row.style.cursor = 'pointer';
-                row.addEventListener('dblclick', () => {
+                row.addEventListener('dblclick', (e) => {
+                    // 체크박스나 버튼 클릭 시에는 더블클릭 이벤트 무시
+                    if (e.target.type === 'checkbox' || e.target.closest('button')) {
+                        return;
+                    }
                     console.log('✅ 프로젝트 더블클릭됨:', project.name);
                     selectProjectForAnalysis(project);
                 });
@@ -3635,6 +3659,212 @@
             updateProjectListDisplay();
             updateProjectSelectOptions();
             console.log('프로젝트 리스트가 새로고침되었습니다.');
+        }
+
+        // 전체 프로젝트 선택/해제
+        function toggleAllProjectSelection() {
+            const selectAllCheckbox = document.getElementById('select-all-projects');
+            const projectCheckboxes = document.querySelectorAll('.project-checkbox');
+            
+            projectCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateDeleteButtonState();
+        }
+
+        // 삭제 버튼 상태 업데이트
+        function updateDeleteButtonState() {
+            const selectedCheckboxes = document.querySelectorAll('.project-checkbox:checked');
+            const deleteButton = document.getElementById('btn-delete-selected-projects');
+            const selectedCountSpan = document.getElementById('selected-count');
+            const selectAllCheckbox = document.getElementById('select-all-projects');
+            
+            const selectedCount = selectedCheckboxes.length;
+            
+            if (selectedCountSpan) {
+                selectedCountSpan.textContent = selectedCount;
+            }
+            
+            if (deleteButton) {
+                deleteButton.disabled = selectedCount === 0;
+            }
+            
+            // 전체 선택 체크박스 상태 업데이트
+            const allCheckboxes = document.querySelectorAll('.project-checkbox');
+            if (selectAllCheckbox && allCheckboxes.length > 0) {
+                selectAllCheckbox.checked = selectedCount === allCheckboxes.length;
+                selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < allCheckboxes.length;
+            }
+        }
+
+        // 선택된 프로젝트 삭제
+        function deleteSelectedProjects() {
+            const selectedCheckboxes = document.querySelectorAll('.project-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('삭제할 프로젝트를 선택해주세요.');
+                return;
+            }
+            
+            const selectedProjectIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.dataset.projectId));
+            const selectedProjects = salesProjectList.filter(p => selectedProjectIds.includes(p.id));
+            
+            const projectNames = selectedProjects.map(p => `• ${p.name} (${p.customer})`).join('\n');
+            const confirmMessage = `다음 프로젝트를 삭제하시겠습니까?\n\n${projectNames}\n\n⚠️ 삭제된 프로젝트는 복구할 수 없습니다.`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // 선택된 프로젝트 삭제
+            salesProjectList = salesProjectList.filter(p => !selectedProjectIds.includes(p.id));
+            
+            // 프로젝트 번호 재정렬
+            salesProjectList.forEach((project, index) => {
+                project.number = index + 1;
+            });
+            
+            // localStorage에 저장
+            saveProjectListToStorage();
+            
+            // UI 업데이트
+            updateProjectListDisplay();
+            updateProjectSelectOptions();
+            
+            // 전체 선택 체크박스 해제
+            const selectAllCheckbox = document.getElementById('select-all-projects');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
+            
+            updateDeleteButtonState();
+            
+            alert(`✅ ${selectedCheckboxes.length}개의 프로젝트가 삭제되었습니다.`);
+            console.log('✅ 프로젝트 삭제 완료:', selectedProjectIds);
+        }
+
+        // 프로젝트 수정 모달 표시
+        function editProject(projectId) {
+            const project = salesProjectList.find(p => p.id === projectId);
+            
+            if (!project) {
+                alert('프로젝트를 찾을 수 없습니다.');
+                return;
+            }
+            
+            console.log('✏️ 프로젝트 수정:', project.name);
+            
+            // 수정 모달 생성 (동적으로 생성)
+            const modal = document.createElement('div');
+            modal.id = 'edit-project-modal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">
+                            <i class="fas fa-edit text-blue-600 mr-2"></i>프로젝트 수정
+                        </h3>
+                        <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트명</label>
+                            <input type="text" id="edit-project-name" value="${project.name}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 타입</label>
+                            <select id="edit-project-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="TOWER" ${project.type === 'TOWER' ? 'selected' : ''}>TOWER</option>
+                                <option value="FOUNDATION" ${project.type === 'FOUNDATION' ? 'selected' : ''}>FOUNDATION</option>
+                                <option value="HUB" ${project.type === 'HUB' ? 'selected' : ''}>HUB</option>
+                                <option value="기타" ${project.type === '기타' ? 'selected' : ''}>기타</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">고객사</label>
+                            <input type="text" id="edit-customer-name" value="${project.customer}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">시작일</label>
+                            <input type="date" id="edit-start-date" value="${project.startDate}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">완료일</label>
+                            <input type="date" id="edit-end-date" value="${project.endDate}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeEditModal()" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-times mr-1"></i>취소
+                        </button>
+                        <button onclick="saveProjectEdit(${projectId})" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-1"></i>저장
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // 프로젝트 수정 저장
+        function saveProjectEdit(projectId) {
+            const project = salesProjectList.find(p => p.id === projectId);
+            
+            if (!project) {
+                alert('프로젝트를 찾을 수 없습니다.');
+                return;
+            }
+            
+            const name = document.getElementById('edit-project-name').value.trim();
+            const type = document.getElementById('edit-project-type').value;
+            const customer = document.getElementById('edit-customer-name').value.trim();
+            const startDate = document.getElementById('edit-start-date').value;
+            const endDate = document.getElementById('edit-end-date').value;
+            
+            if (!name || !type || !customer || !startDate || !endDate) {
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            // 프로젝트 정보 업데이트
+            project.name = name;
+            project.type = type;
+            project.customer = customer;
+            project.startDate = startDate;
+            project.endDate = endDate;
+            
+            // localStorage에 저장
+            saveProjectListToStorage();
+            
+            // UI 업데이트
+            updateProjectListDisplay();
+            updateProjectSelectOptions();
+            
+            // 모달 닫기
+            closeEditModal();
+            
+            alert(`✅ 프로젝트 "${name}"이(가) 수정되었습니다.`);
+            console.log('✅ 프로젝트 수정 완료:', project);
+        }
+
+        // 수정 모달 닫기
+        function closeEditModal() {
+            const modal = document.getElementById('edit-project-modal');
+            if (modal) {
+                modal.remove();
+            }
         }
 
         // BOM 파일 선택 처리 (Sales팀)
