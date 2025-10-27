@@ -534,10 +534,6 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="location.href='project-manager.html'" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2">
-                        <i class="fas fa-project-diagram"></i>
-                        <span>프로젝트 관리</span>
-                    </button>
                     <span class="text-sm text-gray-600">풍력타워 제조</span>
                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                         <i class="fas fa-user text-blue-600"></i>
@@ -1031,6 +1027,51 @@
                             <!-- BOM 트리 행들이 여기에 동적으로 추가됩니다 -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- 시스템 등록 섹션 -->
+            <div id="system-register-section-sales" class="bg-white rounded-lg shadow p-6 mb-6 hidden">
+                <div class="border-l-4 border-green-600 pl-4 mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        시스템 등록
+                    </h3>
+                    <p class="text-sm text-gray-600 mt-1">BOM 분석과 도면 링크가 완료되었습니다. 시스템에 등록하세요.</p>
+                </div>
+
+                <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <div class="flex items-start mb-4">
+                        <i class="fas fa-info-circle text-green-600 text-xl mr-3 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-green-800 mb-2">시스템 등록 안내</p>
+                            <p class="text-sm text-green-700">프로젝트 정보, BOM 데이터, 도면 매칭 결과를 시스템에 최종 등록합니다.</p>
+                            <p class="text-sm text-green-700">등록 후에는 프로젝트 리스트에서 "시스템 등록" 상태가 "완료"로 표시됩니다.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-4 p-4 bg-white rounded-lg">
+                        <div class="text-center">
+                            <i class="fas fa-check-circle text-green-600 text-2xl mb-2"></i>
+                            <p class="text-sm font-semibold text-gray-700">BOM 분석</p>
+                            <p class="text-xs text-green-600">완료</p>
+                        </div>
+                        <div class="text-center">
+                            <i class="fas fa-check-circle text-green-600 text-2xl mb-2"></i>
+                            <p class="text-sm font-semibold text-gray-700">도면 링크</p>
+                            <p class="text-xs text-green-600">완료</p>
+                        </div>
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-pulse text-blue-600 text-2xl mb-2"></i>
+                            <p class="text-sm font-semibold text-gray-700">시스템 등록</p>
+                            <p class="text-xs text-blue-600">대기 중</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="registerProjectToSystem()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>
+                        시스템에 등록하기
+                    </button>
                 </div>
             </div>
 
@@ -2596,6 +2637,7 @@
             window.uploadDrawingPackageSales = uploadDrawingPackageSales;
             window.selectProjectForAnalysis = selectProjectForAnalysis;
             window.createProjectSales = createProjectSales;
+            window.registerProjectToSystem = registerProjectToSystem;
             
             // BOM 트리 관련 함수들 전역 등록 (저장지점 86 복원)
             window.toggleBOMRowSales = toggleBOMRowSales;
@@ -3397,8 +3439,10 @@
                     '<span class="text-gray-400"><i class="fas fa-minus mr-1"></i>미완료</span>';
                 
                 const systemButton = project.systemRegistered ? 
-                    '<span class="text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>등록완료</span>' : 
-                    `<button onclick="showSystemRegistrationModal('${project.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition ${!project.bomAnalyzed || !project.drawingLinked ? 'opacity-50 cursor-not-allowed' : ''}" ${!project.bomAnalyzed || !project.drawingLinked ? 'disabled' : ''}>시스템 등록</button>`;
+                    '<span class="text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>완료</span>' : 
+                    (project.bomAnalyzed && project.drawingLinked ? 
+                        '<span class="text-gray-400"><i class="fas fa-hourglass-half mr-1"></i>대기</span>' : 
+                        '<span class="text-gray-400"><i class="fas fa-minus mr-1"></i>미완료</span>');
                 
                 row.innerHTML = `
                     <td class="px-3 py-2 border-r text-center text-sm font-medium">${project.number}</td>
@@ -5822,7 +5866,14 @@
             
             // 🔥 결과 알림
             const successRate = totalBOMItems > 0 ? (matchedCount / totalBOMItems * 100).toFixed(1) : 0;
-            alert(`드로잉 패키지 업로드 및 매칭이 완료되었습니다!\\n\\n📊 매칭 결과:\\n• 총 PDF 파일: ${pdfFiles.length}개\\n• Number가 있는 BOM 항목: ${totalBOMItems}개\\n• 매칭 성공: ${matchedCount}개\\n• 성공률: ${successRate}%\\n\\n매칭된 도면은 BOM 테이블에서 "보기" 버튼으로 확인할 수 있습니다.`);
+            alert(`✅ 드로잉 패키지 업로드 완료!\n\n📊 매칭 결과:\n• 총 PDF 파일: ${pdfFiles.length}개\n• Number가 있는 BOM 항목: ${totalBOMItems}개\n• 매칭 성공: ${matchedCount}개\n• 성공률: ${successRate}%\n\n✨ 도면 링크 상태가 '완료'로 변경되었습니다.\n✨ 시스템 등록 섹션이 활성화되었습니다.\n\n매칭된 도면은 BOM 테이블에서 "보기" 버튼으로 확인할 수 있습니다.`);
+            
+            // 시스템 등록 섹션 활성화
+            const systemRegisterSection = document.getElementById('system-register-section-sales');
+            if (systemRegisterSection) {
+                systemRegisterSection.classList.remove('hidden');
+                systemRegisterSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
             
             console.log(`✅ 드로잉 패키지 업로드 및 매칭 완료: ${matchedCount}/${totalBOMItems} (${successRate}%)`);
         }
@@ -5842,6 +5893,73 @@
             
             if (fileInput) fileInput.value = '';
             if (infoDiv) infoDiv.classList.add('hidden');
+        }
+
+        // 시스템 등록 함수
+        function registerProjectToSystem() {
+            console.log('🚀 프로젝트 시스템 등록 시작');
+            
+            // 선택된 프로젝트 확인
+            if (!selectedProjectForAnalysis) {
+                alert('프로젝트를 선택해주세요.');
+                return;
+            }
+            
+            // BOM 데이터 확인
+            if (!salesBOMData || salesBOMData.length === 0) {
+                alert('BOM 분석을 먼저 완료해주세요.');
+                return;
+            }
+            
+            // 도면 링크 확인
+            if (!selectedProjectForAnalysis.drawingLinked) {
+                alert('드로잉 패키지 업로드를 먼저 완료해주세요.');
+                return;
+            }
+            
+            // 확인 다이얼로그
+            const confirmMsg = `프로젝트를 시스템에 등록하시겠습니까?\n\n프로젝트: ${selectedProjectForAnalysis.name}\n고객사: ${selectedProjectForAnalysis.customer}\nBOM 항목: ${salesBOMData.length}개\n도면 매칭: ${selectedProjectForAnalysis.drawingMatchingResults?.matchedCount || 0}개\n\n등록 후에는 프로젝트 리스트에서 '시스템 등록' 상태가 '완료'로 표시됩니다.`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            // 프로젝트 상태 업데이트
+            selectedProjectForAnalysis.systemRegistered = true;
+            selectedProjectForAnalysis.systemRegisteredAt = new Date().toISOString();
+            selectedProjectForAnalysis.bomData = salesBOMData;
+            selectedProjectForAnalysis.drawingPackage = salesDrawingPackage.map(f => ({
+                name: f.name,
+                size: f.size,
+                type: f.type
+            }));
+            
+            // 프로젝트 리스트 업데이트
+            const projectIndex = salesProjectList.findIndex(p => p.id === selectedProjectForAnalysis.id);
+            if (projectIndex >= 0) {
+                salesProjectList[projectIndex] = selectedProjectForAnalysis;
+                localStorage.setItem('cswind-sales-projects', JSON.stringify(salesProjectList));
+                updateProjectListDisplay();
+            }
+            
+            // 시스템 등록 섹션 숨기기
+            const systemRegisterSection = document.getElementById('system-register-section-sales');
+            if (systemRegisterSection) {
+                systemRegisterSection.classList.add('hidden');
+            }
+            
+            // 성공 알림
+            alert(`✅ 시스템 등록 완료!\n\n프로젝트: ${selectedProjectForAnalysis.name}\n\n프로젝트 리스트의 '시스템 등록' 상태가 '완료'로 변경되었습니다.\n프로젝트 리스트로 돌아가서 확인하실 수 있습니다.`);
+            
+            console.log('✅ 프로젝트 시스템 등록 완료:', selectedProjectForAnalysis);
+            
+            // 프로젝트 리스트로 돌아가기
+            setTimeout(() => {
+                const backBtn = document.getElementById('btn-back-to-list-from-analysis');
+                if (backBtn) {
+                    backBtn.click();
+                }
+            }, 500);
         }
 
         // Prod. Tech팀 기능들
