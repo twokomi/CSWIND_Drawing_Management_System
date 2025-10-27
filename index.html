@@ -5306,9 +5306,7 @@
             row.id = `row-${item.id}`;
             
             const hasChildren = item.children.length > 0;
-            const toggleIcon = hasChildren ? 
-                `<span class="toggle-icon cursor-pointer text-blue-600 mr-2" onclick="toggleBOMRowSales('${item.id}')">${item.children.some(child => child.isVisible) ? '▼' : '▶'}</span>` : 
-                '<span class="ml-4"></span>';
+            const isExpanded = item.children.some(child => child.isVisible);
             
             const indent = '&nbsp;'.repeat(item.depth * 4);
             
@@ -5318,7 +5316,11 @@
             
             row.innerHTML = `
                 <td class="px-2 py-2 border-r text-xs">${item.depth}</td>
-                <td class="px-2 py-2 border-r text-xs">${indent}${toggleIcon}${item.name}</td>
+                <td class="px-2 py-2 border-r text-xs">
+                    ${indent}
+                    ${hasChildren ? `<span class="toggle-icon cursor-pointer text-blue-600 mr-2" data-item-id="${item.id}">${isExpanded ? '▼' : '▶'}</span>` : '<span class="ml-4"></span>'}
+                    ${item.name}
+                </td>
                 <td class="px-2 py-2 border-r text-xs">${item.number}</td>
                 <td class="px-2 py-2 border-r text-xs">${item.version}</td>
                 <td class="px-2 py-2 border-r text-xs">${item.findNumber}</td>
@@ -5329,23 +5331,48 @@
                 <td class="px-2 py-2 text-center text-xs">${drawingCell}</td>
             `;
             
+            // 토글 아이콘에 이벤트 리스너 추가
+            if (hasChildren) {
+                const toggleIcon = row.querySelector('.toggle-icon');
+                if (toggleIcon) {
+                    toggleIcon.addEventListener('click', function() {
+                        toggleBOMRowSales(item.id);
+                    });
+                }
+            }
+            
             return row;
         }
 
         // BOM 행 토글 (저장지점 86 방식)
         function toggleBOMRowSales(itemId) {
+            console.log('🔄 토글 실행:', itemId);
+            
             const item = salesBOMData.find(i => i.id === itemId);
-            if (!item) return;
+            if (!item) {
+                console.error('❌ 아이템을 찾을 수 없습니다:', itemId);
+                return;
+            }
+            
+            console.log('📋 아이템 정보:', {
+                id: item.id,
+                name: item.name,
+                depth: item.depth,
+                childrenCount: item.children.length
+            });
             
             const shouldShow = !item.children.some(child => child.isVisible);
+            console.log(`${shouldShow ? '📂 펼치기' : '📁 접기'} 실행`);
             
             function toggleChildren(parent, show) {
                 parent.children.forEach(child => {
                     child.isVisible = show;
+                    console.log(`  ${show ? '👁️ 표시' : '🙈 숨김'}: ${child.name} (depth: ${child.depth})`);
+                    
                     if (show && child.children.length > 0) {
                         // 자식이 펼쳐진 상태라면 재귀적으로 표시
-                        const childRow = document.querySelector(`[onclick="toggleBOMRowSales('${child.id}')"]`);
-                        if (childRow && childRow.textContent === '▼') {
+                        const childToggleIcon = document.querySelector(`[data-item-id="${child.id}"]`);
+                        if (childToggleIcon && childToggleIcon.textContent === '▼') {
                             toggleChildren(child, true);
                         }
                     } else if (!show) {
@@ -5358,6 +5385,8 @@
             toggleChildren(item, shouldShow);
             displayBOMTableSales();
             updateBOMStatisticsSales();
+            
+            console.log('✅ 토글 완료');
         }
 
         // BOM 통계 업데이트 (저장지점 86 방식)
