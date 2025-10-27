@@ -119,7 +119,29 @@ window.drawingMap = new Map([
 
 ### 최신 수정 (2025-10-27)
 
-#### 1. 프로젝트 관리 워크플로우 개선 ⭐ NEW
+#### 1. 순환 참조 오류 수정 ⭐ CRITICAL FIX
+- **문제**: 프로젝트 생성/등록 시 "Converting circular structure to JSON" 오류 발생
+- **원인**: BOM 데이터의 parent/children 속성이 순환 참조를 형성
+- **해결**:
+  - `removeBOMCircularReferences()` 헬퍼 함수 추가
+  - `saveProjectListToStorage()` 중앙 집중식 저장 함수 추가
+  - 모든 localStorage 저장 호출을 안전한 함수로 교체
+  - try-catch 오류 처리 및 사용자 피드백 추가
+- **결과**: 
+  - 프로젝트 생성 정상 작동 ✅
+  - 시스템 등록 정상 작동 ✅
+  - 데이터 무결성 보장 ✅
+
+#### 2. 드로잉 패키지 업로드 완료 팝업 수정
+- **문제**: totalBOMItems 변수 미정의로 인한 팝업 오류
+- **해결**: 
+  - totalBOMItems 변수 초기화 및 카운팅 로직 추가
+  - Number가 있는 항목만 집계
+  - 상세 디버깅 로그 추가
+  - 시스템 등록 섹션 활성화 개선
+- **결과**: 업로드 완료 팝업 정상 표시 ✅
+
+#### 3. 프로젝트 관리 워크플로우 개선
 - **Step 1: 프로젝트 리스트 관리**
   - 등록된 프로젝트 목록 표시
   - "+ 새 프로젝트" 버튼으로 프로젝트 생성
