@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Wind - 인터랙티브 BOM 테이블</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table-header h2 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        #bomTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        #bomTable thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #bomTable th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            white-space: nowrap;
+        }
+
+        #bomTable th:last-child {
+            border-right: none;
+        }
+
+        #bomTable tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+
+        #bomTable tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        #bomTable td {
+            padding: 12px 10px;
+            border-right: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+
+        #bomTable td:last-child {
+            border-right: none;
+        }
+
+        .toggle-icon {
+            cursor: pointer;
+            user-select: none;
+            margin-right: 8px;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-icon:hover {
+            color: #5a6fd8;
+            transform: scale(1.2);
+        }
+
+        .name-cell {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .name-text {
+            flex: 1;
+        }
+
+        /* 계층 구조 들여쓰기 */
+        .depth-1 .name-cell { padding-left: 10px; }
+        .depth-2 .name-cell { padding-left: 30px; }
+        .depth-3 .name-cell { padding-left: 50px; }
+        .depth-4 .name-cell { padding-left: 70px; }
+        .depth-5 .name-cell { padding-left: 90px; }
+
+        /* 계층별 배경색 구분 */
+        .depth-1 { background-color: #fff; }
+        .depth-2 { background-color: #f8f9ff; }
+        .depth-3 { background-color: #f0f4ff; }
+        .depth-4 { background-color: #e8f0ff; }
+        .depth-5 { background-color: #e0ecff; }
+
+        .hidden-row {
+            display: none !important;
+        }
+
+        .expanded .toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            #bomTable {
+                font-size: 0.8rem;
+            }
+            
+            #bomTable th,
+            #bomTable td {
+                padding: 8px 5px;
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 섹션 -->
+        <div class="header">
+            <h1>CS Wind BOM 분석 시스템</h1>
+            <p>풍력타워 제조 R&D 부서 - 인터랙티브 BOM 테이블</p>
+        </div>
+
+        <!-- 통계 바 -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="totalItems">0</div>
+                <div class="stat-label">총 아이템</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="visibleItems">0</div>
+                <div class="stat-label">표시 중</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="maxDepth">0</div>
+                <div class="stat-label">최대 레벨</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="parentItems">0</div>
+                <div class="stat-label">부모 아이템</div>
+            </div>
+        </div>
+
+        <!-- 테이블 컨테이너 -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2>BOM 계층 구조 테이블</h2>
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="expandAll()">전체 펼치기</button>
+                    <button class="btn btn-secondary" onclick="collapseAll()">전체 접기</button>
+                    <button class="btn btn-primary" onclick="exportData()">데이터 내보내기</button>
+                </div>
+            </div>
+
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                BOM 데이터 로딩 중...
+            </div>
+
+            <table id="bomTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Find#</th>
+                        <th>Level</th>
+                        <th>부품 번호</th>
+                        <th>부품명</th>
+                        <th>버전</th>
+                        <th>수량</th>
+                        <th>총 수량</th>
+                        <th>단위</th>
+                        <th>중량 (KG)</th>
+                        <th>재질</th>
+                    </tr>
+                </thead>
+                <tbody id="bomTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // CS Wind BOM 샘플 데이터
+        const bomData = [
+            {
+                "FindNumber": 60,
+                "Depth": 1,
+                "Number": "GST02791-000",
+                "Name": "Shell and sockets Mid2 TS105-01",
+                "Version": "A",
+                "Quantity": 1,
+                "TotalQuantity": 1.00,
+                "Unit": "each",
+                "Weight": "-",
+                "Material": "-"
+            },
+            {
+                "FindNumber": 10,
+                "Depth": 2,
+                "Number": "E0005498579",
+                "Name": "asm weld sockets",
+                "Version": "00",
+                "Quantity": 1,
+                "TotalQuantity": 1.00,
+                "Unit": "each",
+                "Weight": "-",
+                "Material": "-"
+            },
+            {
+                "FindNumber": 10,
+                "Depth": 3,
+                "Number": "E0003039487",
+                "Name": "Weld socket - D40 M16 x 2",
+                "Version": "09.01",
+                "Quantity": 2.0,
+                "TotalQuantity": 2.00,
+                "Unit": "each",
+                "Weight": 0.303,
+                "Material": "1.0045 - S355JR"
+            },
+            {
+                "FindNumber": 20,
+                "Depth": 2,
+                "Number": "E0005498581",
+                "Name": "asm weld sockets",
+                "Version": "00",
+                "Quantity": 1,
+                "TotalQuantity": 1.00,
+                "Unit": "each",
+                "Weight": "-",
+                "Material": "-"
+            },
+            {
+                "FindNumber": 10,
+                "Depth": 3,
+                "Number": "E0003039487",
+                "Name": "Weld socket - D40 M16 x 10",
+                "Version": "09.01",
+                "Quantity": 10.0,
+                "TotalQuantity": 10.00,
+                "Unit": "each",
+                "Weight": 0.303,
+                "Material": "1.0045 - S355JR"
+            },
+            {
+                "FindNumber": 30,
+                "Depth": 2,
+                "Number": "E0005498586",
+                "Name": "asm weld sockets",
+                "Version": "00",
+                "Quantity": 1,
+                "TotalQuantity": 1.00,
+                "Unit": "each",
+                "Weight": "-",
+                "Material": "-"
+            },
+            {
+                "FindNumber": 40,
+                "Depth": 3,
+                "Number": "E0003039488",
+                "Name": "Weld socket - D50 M20 x 5",
+                "Version": "10.01",
+                "Quantity": 5.0,
+                "TotalQuantity": 5.00,
+                "Unit": "each",
+                "Weight": 0.455,
+                "Material": "1.0045 - S355JR"
+            },
+            {
+                "FindNumber": 50,
+                "Depth": 4,
+                "Number": "E0003039489",
+                "Name": "Bolt M20 x 50",
+                "Version": "01.00",
+                "Quantity": 20.0,
+                "TotalQuantity": 100.00,
+                "Unit": "each",
+                "Weight": 0.125,
+                "Material": "1.7225 - 42CrMo4"
+            },
+            {
+                "FindNumber": 70,
+                "Depth": 1,
+                "Number": "GST02792-000",
+                "Name": "Main Structure Frame",
+                "Version": "B",
+                "Quantity": 1,
+                "TotalQuantity": 1.00,
+                "Unit": "each",
+                "Weight": "-",
+                "Material": "-"
+            },
+            {
+                "FindNumber": 80,
+                "Depth": 2,
+                "Number": "E0005498590",
+                "Name": "Frame Assembly Left",
+                "Version": "01",
+                "Quantity": 1,
+                "TotalQuantity": 1.00,
+                "Unit": "each",
+                "Weight": "-",
+                "Material": "-"
+            },
+            {
+                "FindNumber": 90,
+                "Depth": 3,
+                "Number": "E0003039490",
+                "Name": "Steel Plate 20mm",
+                "Version": "05.02",
+                "Quantity": 4.0,
+                "TotalQuantity": 4.00,
+                "Unit": "m²",
+                "Weight": 62.8,
+                "Material": "1.0570 - S355J2+N"
+            }
+        ];
+
+        let processedData = [];
+        let expandedItems = new Set();
+
+        // 데이터 전처리 - 부모 여부 판단
+        function preprocessData(data) {
+            const processed = data.map((item, index) => {
+                const nextItem = data[index + 1];
+                const isParent = nextItem && nextItem.Depth > item.Depth;
+                
+                return {
+                    ...item,
+                    isParent: isParent,
+                    rowId: `row-${index}`,
+                    children: []
+                };
+            });
+
+            return processed;
+        }
+
+        // 테이블 렌더링
+        function renderBOMTable() {
+            const tbody = document.getElementById('bomTableBody');
+            tbody.innerHTML = '';
+
+            processedData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.id = item.rowId;
+                row.className = `depth-${item.Depth}`;
+                row.setAttribute('data-level', item.Depth);
+                row.setAttribute('data-index', index);
+
+                // 초기 상태: Depth 1만 보이고 나머지는 숨김
+                if (item.Depth > 1) {
+                    row.classList.add('hidden-row');
+                }
+
+                const toggleIcon = item.isParent ? 
+                    `<span class="toggle-icon" data-expanded="false">▶</span>` : 
+                    '<span style="margin-right: 26px;"></span>';
+
+                row.innerHTML = `
+                    <td>${item.FindNumber}</td>
+                    <td>${item.Depth}</td>
+                    <td>${item.Number}</td>
+                    <td>
+                        <div class="name-cell" onclick="${item.isParent ? `toggleRow(${index})` : ''}">
+                            ${toggleIcon}
+                            <span class="name-text">${item.Name}</span>
+                        </div>
+                    </td>
+                    <td>${item.Version}</td>
+                    <td>${item.Quantity}</td>
+                    <td>${item.TotalQuantity}</td>
+                    <td>${item.Unit}</td>
+                    <td>${item.Weight}</td>
+                    <td>${item.Material}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            updateStatistics();
+        }
+
+        // 행 토글 함수 (핵심 로직)
+        function toggleRow(parentIndex) {
+            const parentItem = processedData[parentIndex];
+            const parentRow = document.getElementById(parentItem.rowId);
+            const toggleIcon = parentRow.querySelector('.toggle-icon');
+            
+            const isCurrentlyExpanded = toggleIcon.getAttribute('data-expanded') === 'true';
+            const newExpandedState = !isCurrentlyExpanded;
+            
+            // 토글 아이콘 상태 변경
+            toggleIcon.setAttribute('data-expanded', newExpandedState);
+            toggleIcon.textContent = newExpandedState ? '▼' : '▶';
+            parentRow.classList.toggle('expanded', newExpandedState);
+
+            // 하위 항목들 토글 (재귀적으로 모든 하위 레벨 포함)
+            const parentDepth = parentItem.Depth;
+            
+            for (let i = parentIndex + 1; i < processedData.length; i++) {
+                const currentItem = processedData[i];
+                
+                // 같은 레벨이거나 더 상위 레벨을 만나면 중단
+                if (currentItem.Depth <= parentDepth) {
+                    break;
+                }
+                
+                const currentRow = document.getElementById(currentItem.rowId);
+                
+                if (newExpandedState) {
+                    // 펼치기: 직계 자식만 보이게 하고, 손자 이하는 각자의 상태에 따라
+                    if (currentItem.Depth === parentDepth + 1) {
+                        currentRow.classList.remove('hidden-row');
+                    }
+                } else {
+                    // 접기: 모든 하위 항목 숨기기
+                    currentRow.classList.add('hidden-row');
+                    
+                    // 하위 항목들의 토글 상태도 초기화
+                    if (currentItem.isParent) {
+                        const childToggleIcon = currentRow.querySelector('.toggle-icon');
+                        if (childToggleIcon) {
+                            childToggleIcon.setAttribute('data-expanded', 'false');
+                            childToggleIcon.textContent = '▶';
+                            currentRow.classList.remove('expanded');
+                        }
+                    }
+                }
+            }
+
+            updateStatistics();
+        }
+
+        // 전체 펼치기
+        function expandAll() {
+            processedData.forEach((item, index) => {
+                const row = document.getElementById(item.rowId);
+                row.classList.remove('hidden-row');
+                
+                if (item.isParent) {
+                    const toggleIcon = row.querySelector('.toggle-icon');
+                    if (toggleIcon) {
+                        toggleIcon.setAttribute('data-expanded', 'true');
+                        toggleIcon.textContent = '▼';
+                        row.classList.add('expanded');
+                    }
+                }
+            });
+            updateStatistics();
+        }
+
+        // 전체 접기
+        function collapseAll() {
+            processedData.forEach((item, index) => {
+                const row = document.getElementById(item.rowId);
+                
+                if (item.Depth > 1) {
+                    row.classList.add('hidden-row');
+                }
+                
+                if (item.isParent) {
+                    const toggleIcon = row.querySelector('.toggle-icon');
+                    if (toggleIcon) {
+                        toggleIcon.setAttribute('data-expanded', 'false');
+                        toggleIcon.textContent = '▶';
+                        row.classList.remove('expanded');
+                    }
+                }
+            });
+            updateStatistics();
+        }
+
+        // 통계 업데이트
+        function updateStatistics() {
+            const totalItems = processedData.length;
+            const visibleRows = document.querySelectorAll('#bomTableBody tr:not(.hidden-row)').length;
+            const maxDepth = Math.max(...processedData.map(item => item.Depth));
+            const parentItems = processedData.filter(item => item.isParent).length;
+
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('visibleItems').textContent = visibleRows;
+            document.getElementById('maxDepth').textContent = maxDepth;
+            document.getElementById('parentItems').textContent = parentItems;
+        }
+
+        // 데이터 내보내기
+        function exportData() {
+            const visibleData = processedData.filter((item, index) => {
+                const row = document.getElementById(item.rowId);
+                return !row.classList.contains('hidden-row');
+            });
+
+            const csvContent = [
+                ['FindNumber', 'Depth', 'Number', 'Name', 'Version', 'Quantity', 'TotalQuantity', 'Unit', 'Weight', 'Material'].join(','),
+                ...visibleData.map(item => 
+                    [item.FindNumber, item.Depth, item.Number, item.Name, item.Version, 
+                     item.Quantity, item.TotalQuantity, item.Unit, item.Weight, item.Material].join(',')
+                )
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `cs_wind_bom_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 초기화
+        function initializeBOMTable() {
+            setTimeout(() => {
+                processedData = preprocessData(bomData);
+                renderBOMTable();
+                
+                // 로딩 완료
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('bomTable').style.display = 'table';
+                
+                console.log('CS Wind BOM 테이블 초기화 완료');
+                console.log(`총 ${processedData.length}개 아이템 로드됨`);
+            }, 1500); // 로딩 애니메이션을 위한 지연
+        }
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('DOMContentLoaded', initializeBOMTable);
+    </script>
+</body>
+</html>

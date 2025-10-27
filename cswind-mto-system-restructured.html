@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSWIND MTO 자동화 시스템 - 구조화된 워크플로우</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SheetJS for Excel file parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+        }
+        
+        .main-tab {
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .main-tab.active {
+            background-color: #1e40af;
+            color: white;
+            border-bottom-color: #fbbf24;
+        }
+        
+        .main-tab:hover:not(.active) {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        
+        .page-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* BOM Tree 스타일링 */
+        .bom-tree-row {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .bom-tree-row:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .bom-tree-row.depth-0 { background-color: #fef3c7; }
+        .bom-tree-row.depth-1 { background-color: #dbeafe; }
+        .bom-tree-row.depth-2 { background-color: #f3e8ff; }
+        .bom-tree-row.depth-3 { background-color: #dcfce7; }
+        .bom-tree-row.depth-4 { background-color: #fce7f3; }
+        .bom-tree-row.depth-5 { background-color: #f1f5f9; }
+        
+        .toggle-icon {
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease;
+        }
+        
+        .toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .pdf-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+        
+        .pdf-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 95%;
+            max-height: 95%;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .role-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .workflow-step {
+            position: relative;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .ai-analysis-demo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 헤더 -->
+    <header class="bg-white shadow-lg border-b-2 border-blue-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-3 rounded-lg mr-4">
+                        <i class="fas fa-wind text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">CSWIND MTO 자동화 시스템</h1>
+                        <p class="text-sm text-gray-600">Sales팀 & Prod. Tech팀 통합 워크플로우</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <div class="text-sm font-medium text-gray-700">R&D 부서</div>
+                        <div class="text-xs text-gray-500">풍력타워 제조 시스템</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 최상위 탭 네비게이션 -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-1">
+                <button onclick="showTab('dashboard')" 
+                        class="main-tab px-6 py-4 text-sm font-medium rounded-t-lg active" 
+                        id="tab-dashboard">
+                    <i class="fas fa-tachometer-alt mr-2"></i>대시보드
+                </button>
+                <button onclick="showTab('project-management')" 
+                        class="main-tab px-6 py-4 text-sm font-medium rounded-t-lg" 
+                        id="tab-project-management">
+                    <i class="fas fa-project-diagram mr-2"></i>프로젝트 관리
+                    <span class="role-badge">Sales팀</span>
+                </button>
+                <button onclick="showTab('bom-analysis')" 
+                        class="main-tab px-6 py-4 text-sm font-medium rounded-t-lg" 
+                        id="tab-bom-analysis">
+                    <i class="fas fa-brain mr-2"></i>BOM 분석
+                    <span class="role-badge">Prod. Tech팀</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 컨테이너 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- 대시보드 페이지 -->
+        <div id="page-dashboard" class="page-content active">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">시스템 대시보드</h2>
+                <p class="text-lg text-gray-600">CSWIND MTO 자동화 시스템의 전체 현황을 확인하세요</p>
+            </div>
+
+            <!-- 워크플로우 개요 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Sales팀 워크플로우 -->
+                <div class="workflow-step">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-green-100 p-3 rounded-lg mr-3">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Sales팀 업무</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            프로젝트 생성 및 기본 정보 입력
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            BOM 파일 업로드 및 기본 분석
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            드로잉 패키지 폴더 등록
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            BOM 구조 유효성 검토
+                        </div>
+                    </div>
+                    <button onclick="showTab('project-management')" 
+                            class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-arrow-right mr-2"></i>프로젝트 관리로 이동
+                    </button>
+                </div>
+
+                <!-- Prod. Tech팀 워크플로우 -->
+                <div class="workflow-step">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-100 p-3 rounded-lg mr-3">
+                            <i class="fas fa-cogs text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Prod. Tech팀 업무</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                            Sales팀 등록 프로젝트 선택
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                            AI 기반 MTO 생성 및 자재 분류
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                            8-way 자재 분류 결과 검토
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-check-circle text-blue-500 mr-2"></i>
+                            승인 워크플로우 진행
+                        </div>
+                    </div>
+                    <button onclick="showTab('bom-analysis')" 
+                            class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-arrow-right mr-2"></i>BOM 분석으로 이동
+                    </button>
+                </div>
+            </div>
+
+            <!-- 프로젝트 현황 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">프로젝트 현황</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600">4</div>
+                        <div class="text-sm text-gray-600">등록된 프로젝트</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600">2</div>
+                        <div class="text-sm text-gray-600">BOM 분석 완료</div>
+                    </div>
+                    <div class="text-center p-4 bg-orange-50 rounded-lg">
+                        <div class="text-2xl font-bold text-orange-600">1</div>
+                        <div class="text-sm text-gray-600">승인 진행 중</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-lg">
+                        <div class="text-2xl font-bold text-purple-600">1</div>
+                        <div class="text-sm text-gray-600">MTO 생성 완료</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 프로젝트 관리 페이지 (Sales팀용) -->
+        <div id="page-project-management" class="page-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-project-diagram text-green-600 mr-3"></i>프로젝트 생성 및 기본 BOM 분석
+                </h2>
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-tie text-green-600 mr-2"></i>
+                        <span class="font-medium text-green-800">Sales팀 전용 페이지</span>
+                    </div>
+                    <p class="text-green-700 mt-1">프로젝트 기본 정보 입력, BOM 파일 업로드, 드로잉 패키지 등록 및 기본 BOM 분석을 수행합니다.</p>
+                </div>
+            </div>
+
+            <!-- 1. 프로젝트 생성 폼 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-folder-plus text-green-600 mr-2"></i>
+                    프로젝트 생성
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트명</label>
+                        <input type="text" id="project-name" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                               placeholder="예: 풍력타워 HUB-E (2025-Q4)">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">고객사</label>
+                        <input type="text" id="customer-name" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                               placeholder="예: Siemens Gamesa">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">프로젝트 시작일</label>
+                        <input type="date" id="project-start-date" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">예상 완료일</label>
+                        <input type="date" id="project-end-date" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                <button onclick="createProject()" 
+                        class="mt-4 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition">
+                    <i class="fas fa-save mr-2"></i>프로젝트 생성
+                </button>
+            </div>
+
+            <!-- 2. BOM 파일 업로드 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-file-excel text-blue-600 mr-2"></i>
+                    BOM 파일 업로드
+                </h3>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
+                    <div class="text-center">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <div class="mb-4">
+                            <label for="bom-file-input-sales" class="cursor-pointer">
+                                <span class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 inline-block">
+                                    <i class="fas fa-file-excel mr-2"></i>BOM 파일 선택
+                                </span>
+                                <input type="file" id="bom-file-input-sales" accept=".xlsx,.xls,.csv" class="hidden">
+                            </label>
+                        </div>
+                        <p class="text-sm text-gray-600">Excel 파일 (.xlsx, .xls) 또는 CSV 파일을 선택하세요</p>
+                        <p class="text-xs text-gray-500 mt-1">지원 컬럼: Depth, Name, Number, Version, FindNumber, Quantity, Unit, Weight, Material 등</p>
+                    </div>
+                </div>
+                
+                <!-- 선택된 파일 정보 -->
+                <div id="selected-bom-file-info" class="hidden bg-blue-50 rounded-lg p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-excel text-green-600 mr-3"></i>
+                            <div>
+                                <p id="bom-file-name" class="font-medium text-gray-700"></p>
+                                <p id="bom-file-size" class="text-sm text-gray-500"></p>
+                            </div>
+                        </div>
+                        <button onclick="clearBOMFile()" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button id="upload-bom-btn-sales" onclick="uploadBOMFileSales()" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200 disabled:bg-gray-400" disabled>
+                    <i class="fas fa-upload mr-2"></i>BOM 파일 업로드 및 분석
+                </button>
+            </div>
+
+            <!-- 3. 드로잉 패키지 폴더 업로드 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-folder-open text-orange-600 mr-2"></i>
+                    드로잉 패키지 폴더 업로드
+                </h3>
+                <div class="border-2 border-dashed border-orange-300 rounded-lg p-6 mb-4">
+                    <div class="text-center">
+                        <i class="fas fa-folder-open text-4xl text-orange-400 mb-4"></i>
+                        <div class="mb-4">
+                            <label for="drawing-package-input-sales" class="cursor-pointer">
+                                <span class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-200 inline-block">
+                                    <i class="fas fa-folder-open mr-2"></i>폴더 선택
+                                </span>
+                                <input type="file" id="drawing-package-input-sales" webkitdirectory directory multiple accept=".pdf" class="hidden">
+                            </label>
+                        </div>
+                        <p class="text-sm text-gray-600">PDF 도면 파일들이 포함된 드로잉 패키지 폴더를 선택하세요</p>
+                        <p class="text-xs text-gray-500 mt-1">자동으로 BOM Number와 도면 파일을 매칭합니다</p>
+                    </div>
+                </div>
+                
+                <!-- 선택된 폴더 정보 -->
+                <div id="selected-drawing-info-sales" class="hidden bg-orange-50 rounded-lg p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-folder-open text-orange-600 mr-3"></i>
+                            <div>
+                                <p id="drawing-folder-name-sales" class="font-medium text-gray-700"></p>
+                                <p id="drawing-file-count-sales" class="text-sm text-gray-500"></p>
+                            </div>
+                        </div>
+                        <button onclick="clearDrawingPackage()" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button id="upload-drawings-btn-sales" onclick="uploadDrawingPackageSales()" 
+                        class="bg-orange-600 text-white px-6 py-2 rounded-md hover:bg-orange-700 transition duration-200 disabled:bg-gray-400" disabled>
+                    <i class="fas fa-upload mr-2"></i>드로잉 패키지 업로드
+                </button>
+            </div>
+
+            <!-- 4. 기본 BOM 분석 테이블 -->
+            <div id="basic-bom-analysis-section" class="bg-white rounded-lg shadow p-6 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-sitemap text-purple-600 mr-2"></i>
+                        기본 BOM 분석 결과
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button onclick="expandAllTreeRowsSales()" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+                            <i class="fas fa-expand-alt mr-1"></i>전체 펼치기
+                        </button>
+                        <button onclick="collapseAllTreeRowsSales()" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200">
+                            <i class="fas fa-compress-alt mr-1"></i>전체 접기
+                        </button>
+                        <button onclick="exportVisibleItemsSales()" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">
+                            <i class="fas fa-download mr-1"></i>CSV 내보내기
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- BOM 통계 정보 -->
+                <div id="bom-statistics-sales" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-center">
+                        <div id="total-items-sales" class="text-2xl font-bold text-blue-600">0</div>
+                        <div class="text-sm text-gray-600">총 아이템</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="visible-items-sales" class="text-2xl font-bold text-green-600">0</div>
+                        <div class="text-sm text-gray-600">표시 중</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="max-depth-sales" class="text-2xl font-bold text-purple-600">0</div>
+                        <div class="text-sm text-gray-600">최대 레벨</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="parent-items-sales" class="text-2xl font-bold text-orange-600">0</div>
+                        <div class="text-sm text-gray-600">부모 아이템</div>
+                    </div>
+                </div>
+                
+                <!-- BOM 트리 테이블 -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-100">
+                            <tr class="text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                <th class="px-2 py-2 border-r text-xs">Depth</th>
+                                <th class="px-2 py-2 border-r text-xs">Name</th>
+                                <th class="px-2 py-2 border-r text-xs">Number</th>
+                                <th class="px-2 py-2 border-r text-xs">Version</th>
+                                <th class="px-2 py-2 border-r text-xs">FindNumber</th>
+                                <th class="px-2 py-2 border-r text-xs">Quantity</th>
+                                <th class="px-2 py-2 border-r text-xs">Unit</th>
+                                <th class="px-2 py-2 border-r text-xs">Weight</th>
+                                <th class="px-2 py-2 border-r text-xs">Material</th>
+                                <th class="px-2 py-2 text-center text-xs">Drawing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bom-tree-body-sales" class="bg-white divide-y divide-gray-200">
+                            <!-- BOM 트리 행들이 여기에 동적으로 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOM 분석 페이지 (Prod. Tech팀용) -->
+        <div id="page-bom-analysis" class="page-content">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-brain text-blue-600 mr-3"></i>AI 고급 BOM 분석 및 MTO 생성
+                </h2>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-cogs text-blue-600 mr-2"></i>
+                        <span class="font-medium text-blue-800">Prod. Tech팀 전용 페이지</span>
+                    </div>
+                    <p class="text-blue-700 mt-1">Sales팀이 등록한 프로젝트를 선택하여 AI 기반 MTO 생성 및 8-way 자재 분류를 수행합니다.</p>
+                </div>
+            </div>
+
+            <!-- 1. 프로젝트 선택 드롭다운 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-project-diagram text-blue-600 mr-2"></i>
+                    프로젝트 선택
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Sales팀 등록 프로젝트 선택
+                        </label>
+                        <select id="project-select-prodtech" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">프로젝트를 선택하세요</option>
+                            <option value="project-001">풍력타워 HUB-A (2025-Q1) - Siemens Gamesa</option>
+                            <option value="project-002">풍력타워 HUB-B (2025-Q2) - Vestas</option>
+                            <option value="project-003">풍력타워 HUB-C (2025-Q3) - GE Renewable Energy</option>
+                            <option value="project-004">풍력타워 HUB-D (2025-Q4) - Ørsted</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 선택된 프로젝트 정보 -->
+                    <div id="selected-project-info-prodtech" class="bg-blue-50 rounded-lg p-4 hidden">
+                        <h4 class="font-medium text-gray-700 mb-2">선택된 프로젝트</h4>
+                        <div id="project-info-content-prodtech" class="text-sm text-gray-600">
+                            <!-- 프로젝트 정보가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 도면 패키지 목록 -->
+            <div id="drawing-package-list" class="bg-white rounded-lg shadow p-6 mb-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-folder-open text-orange-600 mr-2"></i>
+                    등록된 도면 패키지 목록
+                </h3>
+                <div id="drawing-files-list" class="space-y-2">
+                    <!-- 도면 파일 목록이 여기에 표시됩니다 -->
+                </div>
+            </div>
+
+            <!-- 3. AI 분석 및 MTO 생성 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-robot text-purple-600 mr-2"></i>
+                    AI 기반 MTO 생성 및 자재 분류
+                </h3>
+                
+                <div class="ai-analysis-demo mb-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-brain text-2xl mr-3"></i>
+                        <h4 class="text-xl font-semibold">8-Way 자재 분류 AI</h4>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div class="bg-white bg-opacity-20 rounded p-2">• LLT (Long Lead Time)</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• 모듈단위 조립품</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• 고강도 강재</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• 플랜지류</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• Small Parts</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• Large Parts</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• 전장품</div>
+                        <div class="bg-white bg-opacity-20 rounded p-2">• 기타</div>
+                    </div>
+                </div>
+                
+                <button id="btn-ai-mto-generation" onclick="startAIMTOGeneration()" 
+                        class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition duration-200 disabled:from-gray-400 disabled:to-gray-400" disabled>
+                    <i class="fas fa-magic mr-2"></i>AI 기반 MTO 생성 및 자재 분류
+                </button>
+                
+                <!-- AI 분석 진행 표시 -->
+                <div id="ai-analysis-progress" class="hidden mt-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center mb-3">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                        <h4 class="font-medium text-gray-700">AI 분석 진행 중...</h4>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <div id="analysis-step-1" class="flex items-center">
+                            <i class="fas fa-clock text-gray-400 mr-2"></i>
+                            <span>BOM 데이터 구조 분석 중...</span>
+                        </div>
+                        <div id="analysis-step-2" class="flex items-center">
+                            <i class="fas fa-clock text-gray-400 mr-2"></i>
+                            <span>도면 파일 연결 상태 확인 중...</span>
+                        </div>
+                        <div id="analysis-step-3" class="flex items-center">
+                            <i class="fas fa-clock text-gray-400 mr-2"></i>
+                            <span>8-way 자재 분류 실행 중...</span>
+                        </div>
+                        <div id="analysis-step-4" class="flex items-center">
+                            <i class="fas fa-clock text-gray-400 mr-2"></i>
+                            <span>MTO 결과 생성 중...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MTO 분석 결과 영역 -->
+                <div id="mto-results-section" class="hidden mt-6 bg-white border border-gray-200 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        MTO 분석 결과
+                    </h4>
+                    <div id="mto-results-content">
+                        <!-- MTO 결과가 여기에 표시됩니다 -->
+                    </div>
+                    
+                    <!-- 승인 요청 버튼 -->
+                    <div class="mt-6 flex justify-end">
+                        <button id="btn-submit-approval" onclick="submitApprovalRequest()" 
+                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-paper-plane mr-2"></i>승인 요청 (3단계 워크플로우)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 승인 진행 상황 -->
+            <div id="approval-workflow-section" class="bg-white rounded-lg shadow p-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-clipboard-check text-green-600 mr-2"></i>
+                    승인 워크플로우 진행 상황
+                </h3>
+                
+                <!-- 승인 진행창 -->
+                <div id="approval-progress-container-prodtech" class="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-gray-700">결재라인 진행 상황</h4>
+                        <div class="text-xs text-gray-500" id="approval-progress-time-prodtech">
+                            진행 시간: 0초
+                        </div>
+                    </div>
+                    
+                    <!-- 진행 단계 -->
+                    <div class="space-y-3">
+                        <!-- 1단계: 생산기술자 -->
+                        <div class="flex items-center space-x-3" id="approval-step-1-prodtech">
+                            <div class="flex-shrink-0">
+                                <div class="approval-step-icon w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <i class="fas fa-clock text-gray-500 text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">생산기술자</p>
+                                        <p class="text-xs text-gray-500">김설계 (Production Engineer)</p>
+                                    </div>
+                                    <div class="approval-step-status text-xs text-gray-400">대기중...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 2단계: SCM팀장 -->
+                        <div class="flex items-center space-x-3" id="approval-step-2-prodtech">
+                            <div class="flex-shrink-0">
+                                <div class="approval-step-icon w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <i class="fas fa-clock text-gray-500 text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">SCM팀장</p>
+                                        <p class="text-xs text-gray-500">이팀장 (SCM Manager)</p>
+                                    </div>
+                                    <div class="approval-step-status text-xs text-gray-400">대기중...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 3단계: CEO -->
+                        <div class="flex items-center space-x-3" id="approval-step-3-prodtech">
+                            <div class="flex-shrink-0">
+                                <div class="approval-step-icon w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <i class="fas fa-clock text-gray-500 text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-700">CEO</p>
+                                        <p class="text-xs text-gray-500">박대표 (Chief Executive Officer)</p>
+                                    </div>
+                                    <div class="approval-step-status text-xs text-gray-400">대기중...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 진행률 바 -->
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>진행률</span>
+                            <span id="approval-progress-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="approval-progress-bar" class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PDF 모달 -->
+    <div id="pdf-modal" class="pdf-modal">
+        <div class="pdf-modal-content">
+            <button class="pdf-modal-close" onclick="closePDFModal()">&times;</button>
+            <div class="pdf-modal-header">
+                <h3 id="pdf-modal-title">도면 뷰어</h3>
+                <button onclick="downloadCurrentPDF()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    <i class="fas fa-download mr-2"></i>다운로드
+                </button>
+            </div>
+            <div id="pdf-modal-body">
+                <!-- PDF 내용이 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentProject = null;
+        let bomData = [];
+        let drawingPackage = [];
+        let approvalProgress = {
+            isInProgress: false,
+            currentStep: 0,
+            startTime: null,
+            stepTimings: [3000, 5000, 7000] // 각 단계별 승인 시간 (ms)
+        };
+
+        // 탭 전환 기능
+        function showTab(tabName) {
+            // 모든 탭 버튼에서 active 클래스 제거
+            document.querySelectorAll('.main-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 모든 페이지 콘텐츠 숨기기
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 선택된 탭 활성화
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`page-${tabName}`).classList.add('active');
+        }
+
+        // 프로젝트 생성
+        function createProject() {
+            const projectName = document.getElementById('project-name').value;
+            const customerName = document.getElementById('customer-name').value;
+            const startDate = document.getElementById('project-start-date').value;
+            const endDate = document.getElementById('project-end-date').value;
+            
+            if (!projectName || !customerName || !startDate || !endDate) {
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            const project = {
+                id: Date.now(),
+                name: projectName,
+                customer: customerName,
+                startDate: startDate,
+                endDate: endDate,
+                createdAt: new Date().toISOString(),
+                status: 'created'
+            };
+            
+            // 로컬 스토리지에 저장
+            let projects = JSON.parse(localStorage.getItem('cswind-projects') || '[]');
+            projects.push(project);
+            localStorage.setItem('cswind-projects', JSON.stringify(projects));
+            
+            alert(`프로젝트 "${projectName}"이 성공적으로 생성되었습니다!`);
+            
+            // 폼 초기화
+            document.getElementById('project-name').value = '';
+            document.getElementById('customer-name').value = '';
+            document.getElementById('project-start-date').value = '';
+            document.getElementById('project-end-date').value = '';
+        }
+
+        // BOM 파일 선택 처리 (Sales팀)
+        document.getElementById('bom-file-input-sales').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('bom-file-name').textContent = file.name;
+                document.getElementById('bom-file-size').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                document.getElementById('selected-bom-file-info').classList.remove('hidden');
+                document.getElementById('upload-bom-btn-sales').disabled = false;
+            }
+        });
+
+        // 드로잉 패키지 선택 처리 (Sales팀)
+        document.getElementById('drawing-package-input-sales').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                document.getElementById('drawing-folder-name-sales').textContent = `드로잉 패키지 (${files.length}개 파일)`;
+                document.getElementById('drawing-file-count-sales').textContent = `PDF 파일 ${files.length}개 선택됨`;
+                document.getElementById('selected-drawing-info-sales').classList.remove('hidden');
+                document.getElementById('upload-drawings-btn-sales').disabled = false;
+            }
+        });
+
+        // BOM 파일 업로드 (Sales팀)
+        function uploadBOMFileSales() {
+            const fileInput = document.getElementById('bom-file-input-sales');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('BOM 파일을 선택해주세요.');
+                return;
+            }
+            
+            console.log('BOM 파일 업로드 시작:', file.name);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // "Full BOM" 시트 찾기
+                    let sheetName = workbook.SheetNames.find(name => 
+                        name.toLowerCase().includes('bom') || 
+                        name.toLowerCase().includes('full')
+                    ) || workbook.SheetNames[0];
+                    
+                    console.log('선택된 시트:', sheetName);
+                    
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    processBOMData(jsonData);
+                    
+                } catch (error) {
+                    console.error('BOM 파일 처리 오류:', error);
+                    alert('BOM 파일을 읽는 중 오류가 발생했습니다.');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        // BOM 데이터 처리
+        function processBOMData(rawData) {
+            console.log('BOM 데이터 처리 시작:', rawData.length, '행');
+            
+            if (rawData.length < 2) {
+                alert('유효한 BOM 데이터가 없습니다.');
+                return;
+            }
+            
+            const headers = rawData[0];
+            console.log('헤더:', headers);
+            
+            // 컬럼 매핑
+            const columnMapping = {
+                depth: findColumnIndex(headers, ['depth', 'level', '레벨', '계층']),
+                name: findColumnIndex(headers, ['name', 'part name', '부품명', '품명', 'bom cube']),
+                number: findColumnIndex(headers, ['number', 'part number', '부품번호', '품번']),
+                version: findColumnIndex(headers, ['version', 'rev', '버전', '리비전']),
+                findNumber: findColumnIndex(headers, ['find number', 'find', '찾기번호']),
+                quantity: findColumnIndex(headers, ['quantity', 'qty', '수량']),
+                unit: findColumnIndex(headers, ['unit', 'uom', '단위']),
+                weight: findColumnIndex(headers, ['weight', '중량', '무게']),
+                material: findColumnIndex(headers, ['material', '재료', '재질'])
+            };
+            
+            console.log('컬럼 매핑:', columnMapping);
+            
+            bomData = [];
+            
+            for (let i = 1; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (!row || row.length === 0) continue;
+                
+                let depth = row[columnMapping.depth];
+                let name = row[columnMapping.name] || '';
+                
+                // Depth가 비어있는 경우 들여쓰기로 계산
+                if (depth === undefined || depth === null || depth === '') {
+                    if (name && typeof name === 'string') {
+                        const leadingSpaces = name.match(/^(\s*)/)[1].length;
+                        const leadingTabs = name.match(/^(\t*)/)[1].length;
+                        depth = leadingTabs > 0 ? leadingTabs : Math.floor(leadingSpaces / 4);
+                        name = name.trim();
+                    } else {
+                        depth = 0;
+                    }
+                }
+                
+                depth = parseInt(depth) || 0;
+                
+                const item = {
+                    id: `bom-${i}`,
+                    depth: depth,
+                    name: name,
+                    number: row[columnMapping.number] || '',
+                    version: row[columnMapping.version] || '',
+                    findNumber: row[columnMapping.findNumber] || '',
+                    quantity: row[columnMapping.quantity] || '',
+                    unit: row[columnMapping.unit] || '',
+                    weight: row[columnMapping.weight] || '',
+                    material: row[columnMapping.material] || '',
+                    children: [],
+                    isVisible: depth === 0, // 초기에는 Depth 0만 보이기
+                    hasDrawing: false,
+                    drawingFile: null
+                };
+                
+                bomData.push(item);
+            }
+            
+            console.log('처리된 BOM 데이터:', bomData.length, '아이템');
+            
+            // 부모-자식 관계 설정
+            buildBOMHierarchy();
+            
+            // 테이블 표시
+            displayBOMTable();
+            document.getElementById('basic-bom-analysis-section').classList.remove('hidden');
+            
+            alert(`BOM 분석 완료! ${bomData.length}개 아이템이 처리되었습니다.`);
+        }
+
+        // 컬럼 인덱스 찾기
+        function findColumnIndex(headers, possibleNames) {
+            for (let i = 0; i < headers.length; i++) {
+                const header = (headers[i] || '').toString().toLowerCase().trim();
+                if (possibleNames.some(name => header.includes(name.toLowerCase()))) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // BOM 계층 구조 생성
+        function buildBOMHierarchy() {
+            for (let i = 0; i < bomData.length; i++) {
+                const currentItem = bomData[i];
+                
+                // 부모 찾기 (이전 항목 중에서 depth가 하나 적은 항목)
+                for (let j = i - 1; j >= 0; j--) {
+                    if (bomData[j].depth === currentItem.depth - 1) {
+                        currentItem.parent = bomData[j];
+                        bomData[j].children.push(currentItem);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // BOM 테이블 표시
+        function displayBOMTable() {
+            const tbody = document.getElementById('bom-tree-body-sales');
+            tbody.innerHTML = '';
+            
+            bomData.forEach(item => {
+                if (item.isVisible) {
+                    const row = createBOMTableRow(item);
+                    tbody.appendChild(row);
+                }
+            });
+            
+            updateBOMStatistics();
+        }
+
+        // BOM 테이블 행 생성
+        function createBOMTableRow(item) {
+            const row = document.createElement('tr');
+            row.className = `bom-tree-row depth-${Math.min(item.depth, 5)}`;
+            row.id = `row-${item.id}`;
+            
+            const hasChildren = item.children.length > 0;
+            const toggleIcon = hasChildren ? 
+                `<span class="toggle-icon cursor-pointer text-blue-600 mr-2" onclick="toggleBOMRow('${item.id}')">${item.children.some(child => child.isVisible) ? '▼' : '▶'}</span>` : 
+                '<span class="ml-4"></span>';
+            
+            const indent = '&nbsp;'.repeat(item.depth * 4);
+            
+            const drawingCell = item.hasDrawing ? 
+                `<button onclick="showPDFModal('${item.drawingFile}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded">보기</button>` :
+                '<span class="text-gray-400 text-xs">없음</span>';
+            
+            row.innerHTML = `
+                <td class="px-2 py-2 border-r text-xs">${item.depth}</td>
+                <td class="px-2 py-2 border-r text-xs">${indent}${toggleIcon}${item.name}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.number}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.version}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.findNumber}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.quantity}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.unit}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.weight}</td>
+                <td class="px-2 py-2 border-r text-xs">${item.material}</td>
+                <td class="px-2 py-2 text-center text-xs">${drawingCell}</td>
+            `;
+            
+            return row;
+        }
+
+        // BOM 행 토글
+        function toggleBOMRow(itemId) {
+            const item = bomData.find(i => i.id === itemId);
+            if (!item) return;
+            
+            const shouldShow = !item.children.some(child => child.isVisible);
+            
+            function toggleChildren(parent, show) {
+                parent.children.forEach(child => {
+                    child.isVisible = show;
+                    if (show && child.children.length > 0) {
+                        // 자식이 펼쳐진 상태라면 재귀적으로 표시
+                        const childRow = document.querySelector(`[onclick="toggleBOMRow('${child.id}')"]`);
+                        if (childRow && childRow.textContent === '▼') {
+                            toggleChildren(child, true);
+                        }
+                    } else if (!show) {
+                        // 접을 때는 모든 하위 항목 숨기기
+                        toggleChildren(child, false);
+                    }
+                });
+            }
+            
+            toggleChildren(item, shouldShow);
+            displayBOMTable();
+        }
+
+        // BOM 통계 업데이트
+        function updateBOMStatistics() {
+            const totalItems = bomData.length;
+            const visibleItems = bomData.filter(item => item.isVisible).length;
+            const maxDepth = Math.max(...bomData.map(item => item.depth));
+            const parentItems = bomData.filter(item => item.children.length > 0).length;
+            
+            document.getElementById('total-items-sales').textContent = totalItems;
+            document.getElementById('visible-items-sales').textContent = visibleItems;
+            document.getElementById('max-depth-sales').textContent = maxDepth;
+            document.getElementById('parent-items-sales').textContent = parentItems;
+        }
+
+        // 전체 펼치기/접기
+        function expandAllTreeRowsSales() {
+            bomData.forEach(item => item.isVisible = true);
+            displayBOMTable();
+        }
+
+        function collapseAllTreeRowsSales() {
+            bomData.forEach(item => item.isVisible = item.depth === 0);
+            displayBOMTable();
+        }
+
+        // CSV 내보내기
+        function exportVisibleItemsSales() {
+            const visibleItems = bomData.filter(item => item.isVisible);
+            if (visibleItems.length === 0) {
+                alert('내보낼 데이터가 없습니다.');
+                return;
+            }
+            
+            const csvContent = 'Depth,Name,Number,Version,FindNumber,Quantity,Unit,Weight,Material\n' +
+                visibleItems.map(item => 
+                    `${item.depth},"${item.name}","${item.number}","${item.version}","${item.findNumber}","${item.quantity}","${item.unit}","${item.weight}","${item.material}"`
+                ).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'bom_analysis_sales.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 드로잉 패키지 업로드 (Sales팀)
+        function uploadDrawingPackageSales() {
+            const fileInput = document.getElementById('drawing-package-input-sales');
+            const files = Array.from(fileInput.files);
+            
+            if (files.length === 0) {
+                alert('드로잉 패키지 폴더를 선택해주세요.');
+                return;
+            }
+            
+            console.log('드로잉 패키지 업로드 시작:', files.length, '개 파일');
+            
+            drawingPackage = files.filter(file => file.type === 'application/pdf');
+            
+            // BOM Number와 도면 파일 매칭
+            matchDrawingsWithBOM();
+            
+            alert(`드로잉 패키지 업로드 완료! ${drawingPackage.length}개 PDF 파일이 처리되었습니다.`);
+        }
+
+        // 도면 파일과 BOM 매칭
+        function matchDrawingsWithBOM() {
+            let matchCount = 0;
+            
+            bomData.forEach(item => {
+                if (item.number) {
+                    const matchingDrawing = drawingPackage.find(file => 
+                        file.name.includes(item.number) || 
+                        extractDrawingNumber(file.name) === item.number
+                    );
+                    
+                    if (matchingDrawing) {
+                        item.hasDrawing = true;
+                        item.drawingFile = matchingDrawing;
+                        matchCount++;
+                    }
+                }
+            });
+            
+            console.log(`도면 매칭 완료: ${matchCount}개 BOM 아이템이 도면과 연결되었습니다.`);
+            
+            // 테이블 업데이트
+            if (document.getElementById('basic-bom-analysis-section').classList.contains('hidden') === false) {
+                displayBOMTable();
+            }
+        }
+
+        // 도면번호 추출
+        function extractDrawingNumber(filename) {
+            // GST 패턴
+            const gstMatch = filename.match(/GST\d{5}-\d{3}/i);
+            if (gstMatch) return gstMatch[0];
+            
+            // E 시리즈 패턴
+            const eMatch = filename.match(/E\d{10}(-\d{2})?/i);
+            if (eMatch) return eMatch[0];
+            
+            // 일반 패턴
+            const generalMatch = filename.match(/([A-Z0-9]{8,})/i);
+            if (generalMatch) return generalMatch[0];
+            
+            return '';
+        }
+
+        // PDF 모달 표시
+        function showPDFModal(drawingFile) {
+            const modal = document.getElementById('pdf-modal');
+            const title = document.getElementById('pdf-modal-title');
+            const body = document.getElementById('pdf-modal-body');
+            
+            title.textContent = `도면: ${drawingFile.name}`;
+            
+            const url = URL.createObjectURL(drawingFile);
+            body.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="600px">`;
+            
+            modal.classList.add('show');
+        }
+
+        // PDF 모달 닫기
+        function closePDFModal() {
+            document.getElementById('pdf-modal').classList.remove('show');
+        }
+
+        // 파일 정리 함수들
+        function clearBOMFile() {
+            document.getElementById('bom-file-input-sales').value = '';
+            document.getElementById('selected-bom-file-info').classList.add('hidden');
+            document.getElementById('upload-bom-btn-sales').disabled = true;
+        }
+
+        function clearDrawingPackage() {
+            document.getElementById('drawing-package-input-sales').value = '';
+            document.getElementById('selected-drawing-info-sales').classList.add('hidden');
+            document.getElementById('upload-drawings-btn-sales').disabled = true;
+        }
+
+        // Prod. Tech팀 기능들
+
+        // 프로젝트 선택 (Prod. Tech팀)
+        document.getElementById('project-select-prodtech').addEventListener('change', function(e) {
+            const selectedValue = e.target.value;
+            const selectedText = e.target.options[e.target.selectedIndex].text;
+            
+            if (selectedValue) {
+                // 프로젝트 정보 표시
+                document.getElementById('project-info-content-prodtech').innerHTML = `
+                    <div class="text-sm space-y-1">
+                        <div><strong>프로젝트:</strong> ${selectedText}</div>
+                        <div><strong>상태:</strong> <span class="text-green-600">BOM 분석 완료</span></div>
+                        <div><strong>등록일:</strong> ${new Date().toLocaleDateString('ko-KR')}</div>
+                    </div>
+                `;
+                document.getElementById('selected-project-info-prodtech').classList.remove('hidden');
+                
+                // 도면 패키지 목록 표시
+                showDrawingPackageList();
+                
+                // AI 분석 버튼 활성화
+                document.getElementById('btn-ai-mto-generation').disabled = false;
+            } else {
+                document.getElementById('selected-project-info-prodtech').classList.add('hidden');
+                document.getElementById('drawing-package-list').classList.add('hidden');
+                document.getElementById('btn-ai-mto-generation').disabled = true;
+            }
+        });
+
+        // 도면 패키지 목록 표시
+        function showDrawingPackageList() {
+            const mockDrawingFiles = [
+                'GST03371-001_Tower_Base_Flange.pdf',
+                'E0004044163-00_Hub_Assembly.pdf',
+                'E0002862040-01_Platform_Flange.pdf',
+                'GST04521-002_Nacelle_Frame.pdf',
+                'E0004282266-00_Rotor_Hub.pdf'
+            ];
+            
+            const listContainer = document.getElementById('drawing-files-list');
+            listContainer.innerHTML = '';
+            
+            mockDrawingFiles.forEach((filename, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded border';
+                fileItem.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-file-pdf text-red-600 mr-3"></i>
+                        <span class="text-sm font-medium text-gray-700">${filename}</span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        ${(Math.random() * 5 + 1).toFixed(1)} MB
+                    </div>
+                `;
+                listContainer.appendChild(fileItem);
+            });
+            
+            document.getElementById('drawing-package-list').classList.remove('hidden');
+        }
+
+        // AI MTO 생성 시작
+        function startAIMTOGeneration() {
+            console.log('AI MTO 생성 시작');
+            
+            // 진행 표시
+            document.getElementById('ai-analysis-progress').classList.remove('hidden');
+            document.getElementById('btn-ai-mto-generation').disabled = true;
+            
+            // 단계별 진행 시뮬레이션
+            simulateAIAnalysis();
+        }
+
+        // AI 분석 시뮬레이션
+        function simulateAIAnalysis() {
+            const steps = [
+                { id: 'analysis-step-1', text: 'BOM 데이터 구조 분석 완료', delay: 2000 },
+                { id: 'analysis-step-2', text: '도면 파일 연결 상태 확인 완료', delay: 3000 },
+                { id: 'analysis-step-3', text: '8-way 자재 분류 실행 완료', delay: 4000 },
+                { id: 'analysis-step-4', text: 'MTO 결과 생성 완료', delay: 5000 }
+            ];
+            
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    const stepElement = document.getElementById(step.id);
+                    stepElement.innerHTML = `
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span class="text-green-700">${step.text}</span>
+                    `;
+                    
+                    // 마지막 단계에서 결과 표시
+                    if (index === steps.length - 1) {
+                        setTimeout(() => {
+                            showMTOResults();
+                        }, 1000);
+                    }
+                }, step.delay);
+            });
+        }
+
+        // MTO 결과 표시
+        function showMTOResults() {
+            const resultsContent = document.getElementById('mto-results-content');
+            
+            const mockResults = [
+                { category: 'LLT (Long Lead Time)', count: 12, items: ['Main Bearing', 'Generator', 'Transformer'] },
+                { category: '모듈단위 조립품', count: 8, items: ['Hub Assembly', 'Nacelle Frame', 'Tower Section'] },
+                { category: '고강도 강재', count: 15, items: ['S355 Steel Plate', 'S690 High Strength Steel'] },
+                { category: '플랜지류', count: 6, items: ['Base Flange', 'Platform Flange', 'Connection Flange'] },
+                { category: 'Small Parts', count: 45, items: ['Bolts M24', 'Washers', 'Nuts'] },
+                { category: 'Large Parts', count: 7, items: ['Tower Shell', 'Door Frame', 'Ladder'] },
+                { category: '전장품', count: 9, items: ['Control Panel', 'Cables', 'Sensors'] },
+                { category: '기타', count: 18, items: ['Gaskets', 'Seals', 'Lubricants'] }
+            ];
+            
+            resultsContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${mockResults.map(category => `
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="font-medium text-gray-800">${category.category}</h5>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">${category.count}개</span>
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                ${category.items.slice(0, 2).join(', ')}${category.items.length > 2 ? ' 외' : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-4 p-4 bg-green-50 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        <span class="font-medium text-green-800">분석 완료</span>
+                    </div>
+                    <p class="text-green-700 text-sm mt-1">총 120개 아이템이 8가지 카테고리로 분류되었습니다.</p>
+                </div>
+            `;
+            
+            document.getElementById('ai-analysis-progress').classList.add('hidden');
+            document.getElementById('mto-results-section').classList.remove('hidden');
+        }
+
+        // 승인 요청
+        function submitApprovalRequest() {
+            console.log('승인 요청 시작');
+            
+            document.getElementById('approval-workflow-section').classList.remove('hidden');
+            document.getElementById('btn-submit-approval').disabled = true;
+            
+            startApprovalWorkflow();
+        }
+
+        // 승인 워크플로우 시작
+        function startApprovalWorkflow() {
+            approvalProgress.isInProgress = true;
+            approvalProgress.currentStep = 0;
+            approvalProgress.startTime = Date.now();
+            
+            processApprovalStep(0);
+        }
+
+        // 승인 단계 처리
+        function processApprovalStep(stepIndex) {
+            if (stepIndex >= 3) {
+                // 모든 승인 완료
+                completeApprovalWorkflow();
+                return;
+            }
+            
+            const stepElement = document.getElementById(`approval-step-${stepIndex + 1}-prodtech`);
+            const iconElement = stepElement.querySelector('.approval-step-icon');
+            const statusElement = stepElement.querySelector('.approval-step-status');
+            
+            // 진행 중 표시
+            iconElement.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>';
+            iconElement.className = 'approval-step-icon w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center';
+            statusElement.textContent = '검토 중...';
+            statusElement.className = 'approval-step-status text-xs text-blue-600 font-medium';
+            
+            // 진행률 업데이트
+            const progress = ((stepIndex + 0.5) / 3) * 100;
+            document.getElementById('approval-progress-bar').style.width = `${progress}%`;
+            document.getElementById('approval-progress-percent').textContent = `${Math.round(progress)}%`;
+            
+            // 승인 완료 처리
+            setTimeout(() => {
+                iconElement.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
+                iconElement.className = 'approval-step-icon w-8 h-8 rounded-full bg-green-500 flex items-center justify-center';
+                statusElement.textContent = new Date().toLocaleTimeString('ko-KR');
+                statusElement.className = 'approval-step-status text-xs text-green-600 font-medium';
+                
+                // 다음 단계로
+                setTimeout(() => {
+                    processApprovalStep(stepIndex + 1);
+                }, 500);
+                
+            }, approvalProgress.stepTimings[stepIndex]);
+            
+            // 시간 업데이트
+            updateApprovalTime();
+        }
+
+        // 승인 시간 업데이트
+        function updateApprovalTime() {
+            const timeInterval = setInterval(() => {
+                if (!approvalProgress.isInProgress) {
+                    clearInterval(timeInterval);
+                    return;
+                }
+                
+                const elapsed = Math.floor((Date.now() - approvalProgress.startTime) / 1000);
+                document.getElementById('approval-progress-time-prodtech').textContent = `진행 시간: ${elapsed}초`;
+            }, 1000);
+        }
+
+        // 승인 워크플로우 완료
+        function completeApprovalWorkflow() {
+            approvalProgress.isInProgress = false;
+            
+            // 100% 완료 표시
+            document.getElementById('approval-progress-bar').style.width = '100%';
+            document.getElementById('approval-progress-percent').textContent = '100%';
+            
+            // 완료 메시지 표시
+            setTimeout(() => {
+                alert('🎉 승인 워크플로우가 완료되었습니다!\n\nCEO 승인 완료 패키지가 자동으로 생성되었습니다.');
+                
+                // 5초 후 진행창 숨기기
+                setTimeout(() => {
+                    document.getElementById('approval-workflow-section').classList.add('hidden');
+                    document.getElementById('btn-submit-approval').disabled = false;
+                }, 5000);
+            }, 1000);
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('CSWIND MTO 시스템 초기화 완료');
+            
+            // ESC 키로 모달 닫기
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closePDFModal();
+                }
+            });
+            
+            // 모달 외부 클릭으로 닫기
+            document.getElementById('pdf-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePDFModal();
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

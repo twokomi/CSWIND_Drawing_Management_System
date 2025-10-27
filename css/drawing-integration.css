@@ -1,0 +1,127 @@
+/* 드로잉 패키지 업로드 스타일 */
+
+.upload-panel {
+    transition: all 0.3s ease;
+}
+
+.upload-panel.hidden {
+    display: none !important;
+}
+
+/* 탭 스타일 */
+#tab-bom-upload, #tab-drawing-upload {
+    cursor: pointer !important;
+    transition: all 0.2s ease;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+}
+
+#tab-bom-upload:hover, #tab-drawing-upload:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+}
+
+/* 탭 클릭 활성화 보장 */
+#upload-tab-container {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+#upload-tab-container > button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 100 !important;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+}
+
+#upload-tab-container > button * {
+    pointer-events: none !important;
+}
+
+/* 드로잉 탭 강조 (디버깅용) */
+#tab-drawing-upload {
+    border: 2px solid #f59e0b !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3) !important;
+}
+
+#tab-drawing-upload:hover {
+    border-color: #d97706 !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5) !important;
+    transform: scale(1.02) !important;
+}
+
+#tab-drawing-upload:active {
+    background-color: #f59e0b !important;
+    color: white !important;
+    transform: scale(0.98) !important;
+}
+
+/* 클릭 가능한 상태 표시 */
+#upload-tab-container button {
+    position: relative;
+    overflow: hidden;
+}
+
+#upload-tab-container button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+#upload-tab-container button:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* 파일 업로드 영역 스타일 */
+.border-dashed {
+    border-style: dashed;
+}
+
+/* 버튼 활성화/비활성화 스타일 */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* PDF 모달 스타일 개선 */
+.pdf-modal iframe {
+    border: none;
+    border-radius: 4px;
+}
+
+/* 도면 연결 상태 표시 */
+.drawing-link-cell button {
+    transition: all 0.2s ease;
+}
+
+.drawing-link-cell button:hover {
+    transform: scale(1.05);
+}
+
+/* 업로드 상태 표시 */
+.upload-status {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
