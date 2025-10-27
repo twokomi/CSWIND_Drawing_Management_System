@@ -3309,7 +3309,45 @@
         
         // 프로젝트 선택 및 분석 화면 이동
         function selectProjectForAnalysis(project) {
+            console.log('🔍 프로젝트 선택:', project.name, '(ID:', project.id, ')');
+            
             selectedProjectForAnalysis = project;
+            
+            // 🔥 프로젝트별 BOM 데이터 불러오기
+            if (project.bomData && Array.isArray(project.bomData)) {
+                console.log('📦 저장된 BOM 데이터 불러오기:', project.bomData.length, '개 아이템');
+                salesBOMData = project.bomData;
+                
+                // BOM 테이블 표시
+                displayBOMTableSales();
+                document.getElementById('basic-bom-analysis-section-sales').classList.remove('hidden');
+            } else {
+                console.log('⚠️ 저장된 BOM 데이터 없음 - 초기화');
+                salesBOMData = [];
+                document.getElementById('basic-bom-analysis-section-sales').classList.add('hidden');
+            }
+            
+            // 🔥 프로젝트별 드로잉 패키지 불러오기 (메타데이터만)
+            if (project.drawingPackage && Array.isArray(project.drawingPackage)) {
+                console.log('📄 저장된 드로잉 패키지 메타데이터:', project.drawingPackage.length, '개 파일');
+                // 드로잉 파일은 File 객체가 아니라 메타데이터만 저장되므로 실제 파일은 복원 불가
+                salesDrawingPackage = [];
+            } else {
+                console.log('⚠️ 저장된 드로잉 패키지 없음');
+                salesDrawingPackage = [];
+            }
+            
+            // 🔥 시스템 등록 섹션 표시/숨김
+            const systemRegisterSection = document.getElementById('system-register-section-sales');
+            if (systemRegisterSection) {
+                if (project.bomAnalyzed && project.drawingLinked && !project.systemRegistered) {
+                    // BOM + 드로잉 완료했지만 시스템 미등록 → 표시
+                    systemRegisterSection.classList.remove('hidden');
+                } else {
+                    // 그 외 경우 숨김
+                    systemRegisterSection.classList.add('hidden');
+                }
+            }
             
             // 선택된 프로젝트 정보 표시
             const projectInfoElement = document.querySelector('#selected-project-info span');
@@ -3320,7 +3358,14 @@
             // BOM 분석 & 드로잉 업로드 화면으로 이동
             showWorkflowStep('step-bom-drawing');
             
-            console.log('프로젝트 선택 및 분석 진입:', project);
+            console.log('✅ 프로젝트 선택 완료:', {
+                id: project.id,
+                name: project.name,
+                bomItems: salesBOMData.length,
+                bomAnalyzed: project.bomAnalyzed,
+                drawingLinked: project.drawingLinked,
+                systemRegistered: project.systemRegistered
+            });
         }
 
         // Sales팀 기능들
@@ -5381,6 +5426,12 @@
             // 🎯 6단계: 통계 업데이트
             updateBOMStatisticsSales();
             
+            // 🔥 프로젝트에 BOM 데이터 저장
+            if (selectedProjectForAnalysis) {
+                selectedProjectForAnalysis.bomData = salesBOMData;
+                console.log(`💾 프로젝트 "${selectedProjectForAnalysis.name}"에 BOM 데이터 저장됨:`, salesBOMData.length, '개 아이템');
+            }
+            
             alert(`BOM 분석 완료!\n\n${salesBOMData.length}개 아이템이 처리되었습니다.\n\n실제 도면번호: ${numberItems.length}개\n포지션 번호: ${findNumberItems.length}개`);
         }
         
@@ -5862,6 +5913,10 @@
                 matchedCount: matchedCount,
                 successRate: totalBOMItems > 0 ? (matchedCount / totalBOMItems * 100).toFixed(1) : 0
             };
+            
+            // 🔥 프로젝트에 업데이트된 BOM 데이터 저장 (드로잉 매칭 정보 포함)
+            selectedProjectForAnalysis.bomData = salesBOMData;
+            console.log(`💾 프로젝트 "${selectedProjectForAnalysis.name}"에 드로잉 매칭된 BOM 데이터 저장됨:`, salesBOMData.length, '개 아이템');
             
             // 프로젝트 리스트 업데이트
             const projectIndex = salesProjectList.findIndex(p => p.id === selectedProjectForAnalysis.id);
