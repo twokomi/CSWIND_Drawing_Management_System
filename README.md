@@ -3,6 +3,9 @@
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
+## 🌐 접속 URL
+- **개발 서버**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+
 ## ✅ 현재 완료된 기능 (Save Point 86 기준)
 
 ### 1. BOM 데이터 처리 시스템 ✅
@@ -107,21 +110,31 @@ window.drawingMap = new Map([
 ]);
 ```
 
-## 🛠️ 주요 수정사항 (Save Point 86)
+## 🛠️ 주요 수정사항
 
-### 1. BOM 컬럼 매핑 정확성 수정
+### 최신 수정 (2025-10-27)
+- **PDF 미리보기 로딩 문제 해결**
+  - `<embed>` 태그에서 `<iframe>` 태그로 변경하여 브라우저 호환성 향상
+  - PDF 로딩 파라미터 추가 (`#toolbar=1&navpanes=1&scrollbar=1`)
+  - PDF 표시 실패 시 다운로드 링크 제공하는 폴백 메시지 추가
+  - 디버깅을 위한 콘솔 로그 추가
+  - 배경색 추가로 로딩 상태 시각적 피드백 개선
+
+### Save Point 86
+
+#### 1. BOM 컬럼 매핑 정확성 수정
 - **문제**: FindNumber 컬럼에 Quantity 값이, Number 컬럼에 FindNumber 값이 잘못 매핑됨
 - **해결**: Excel 헤더 분석을 통해 정확한 컬럼 위치 자동 감지
 - **결과**: GST03315-001, E0005030033 등 실제 도면번호가 Number 컬럼에 정확히 표시
 
-### 2. PDF 매칭 로직 완전 재작성
+#### 2. PDF 매칭 로직 완전 재작성
 - **기존**: 복잡한 정규식 패턴 매칭 및 E-pattern 분석
 - **신규**: 직접 문자열 포함 여부 비교
 - **예시**: 
   - BOM: `E0005476410-00` → PDF파일명에 `E0005476410` 포함 여부 확인
   - BOM: `30972` → PDF파일명에 `30972` 포함 여부 확인
 
-### 3. FindNumber 로직 개선
+#### 3. FindNumber 로직 개선
 - **Depth 0 항목**: 자동으로 FindNumber 필드를 빈값으로 설정
 - **Depth 1+ 항목**: Excel에서 FindNumber 관련 헤더를 자동 감지하여 매핑
 
