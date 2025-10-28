@@ -6955,39 +6955,11 @@
                 updateProjectListDisplay();
             }
             
-            // 🔥 중요: 시스템 등록 후 현재 화면의 salesBOMData를 저장된 데이터로 동기화
-            // 이렇게 하지 않으면 화면에 표시되는 BOM 데이터와 저장된 데이터가 불일치하여
-            // drawingFile 객체가 여전히 메모리에 남아있어 "보기" 버튼이 잘못 표시됨
-            console.log('🔄 시스템 등록 후 BOM 데이터 동기화 시작');
-            console.log('📊 동기화 전 salesBOMData 샘플:', salesBOMData.slice(0, 2).map(item => ({
-                number: item.number,
-                hasDrawing: item.hasDrawing,
-                drawingFile: item.drawingFile ? 'EXISTS' : 'NULL',
-                drawingFileName: item.drawingFileName
-            })));
-            
-            salesBOMData = selectedProjectForAnalysis.bomData.map(item => ({
-                ...item,
-                children: [],
-                parent: null,
-                isVisible: item.depth === 0 || item.isVisible,
-                drawingFile: null  // 명시적으로 null 설정
-            }));
-            
-            console.log('📊 동기화 후 salesBOMData 샘플:', salesBOMData.slice(0, 2).map(item => ({
-                number: item.number,
-                hasDrawing: item.hasDrawing,
-                drawingFile: item.drawingFile,
-                drawingFileName: item.drawingFileName
-            })));
-            
-            // BOM 계층 구조 재구성
-            buildBOMHierarchySales();
-            
-            // BOM 테이블 다시 렌더링 (drawingFile 없는 상태로 표시)
-            displayBOMTableSales();
-            
-            console.log('✅ 시스템 등록 후 BOM 데이터 동기화 완료');
+            // 🔥 IndexedDB 시대: 시스템 등록 후에도 drawingFile 객체 유지!
+            // IndexedDB에 PDF 파일이 저장되어 있으므로 메모리의 drawingFile 객체를 유지합니다.
+            // 이렇게 하면 시스템 등록 직후에도 "보기" 버튼이 계속 작동합니다.
+            // 프로젝트 재진입 시에는 IndexedDB에서 파일을 복원하여 동일한 경험을 제공합니다.
+            console.log('✅ 시스템 등록 완료 - drawingFile 객체 유지 (IndexedDB 덕분에 재진입 시에도 복원 가능!)');
             
             // 시스템 등록 섹션 숨기기
             const systemRegisterSection = document.getElementById('system-register-section-sales');
