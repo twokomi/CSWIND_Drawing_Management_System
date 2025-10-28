@@ -1,4 +1,4 @@
-# CSWIND MTO 시스템 - Save Point 96
+# CSWIND MTO 시스템 - Save Point 97
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
@@ -6,12 +6,37 @@
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
 - **최신 배포 (Save Point 96)**: https://78e941d6.cswind-mto.pages.dev
-- **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+- **개발 서버 (Sandbox - Save Point 97)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 96 기준)
+## ✅ 현재 완료된 기능 (Save Point 97 기준)
 
-### 0. IndexedDB로 PDF 파일 영구 저장 ✅ (UPDATED - Save Point 96!)
+### 0. IndexedDB 비동기 타이밍 수정 ✅ (CRITICAL FIX - Save Point 97!)
+- **발견된 문제**: Save Point 96 구현 후에도 재진입 시 초록색 텍스트만 표시되는 버그
+- **근본 원인**: 
+  - `displayBOMTableSales()`가 IndexedDB 복원 **이전**에 호출됨 (라인 3484)
+  - IndexedDB 복원은 비동기(Promise)이므로 파일 객체가 없는 상태로 테이블 렌더링
+  - 결과: `drawingFile`이 없어서 초록색 파일명 텍스트만 표시
+- **수정 사항**:
+  1. **첫 번째 `displayBOMTableSales()` 호출 제거**: BOM 데이터 로드 직후 호출 제거
+  2. **IndexedDB 복원 완료 후 렌더링**: Promise `.then()` 블록에서만 테이블 렌더링
+  3. **예외 처리**: 드로잉 패키지가 없거나 IndexedDB 실패 시에도 테이블 렌더링
+- **강화된 디버깅 로그**:
+  - `loadAllDrawingFiles()`: IndexedDB 쿼리 시작/성공, 각 파일의 File 객체 여부 출력
+  - `createBOMTableRowSales()`: `hasDrawing`이 true인 모든 항목의 상태 출력 (File/Blob 객체 여부 명시)
+- **예상 결과**:
+  - ✅ 재진입 시 IndexedDB에서 File 객체 완전 복원
+  - ✅ 파란색 "📄 보기" 버튼 정상 표시
+  - ✅ PDF 열기 기능 100% 작동
+- **테스트 시나리오**:
+  1. 프로젝트 생성 → BOM 업로드 → 드로잉 매칭 → 시스템 등록
+  2. 프로젝트 리스트로 나가기
+  3. 등록된 프로젝트 재진입
+  4. 드로잉 컬럼에 파란색 "보기" 버튼 확인 (초록색 텍스트 ❌)
+  5. "보기" 버튼 클릭 → PDF 팝업 정상 작동 확인
+  6. 브라우저 콘솔에서 IndexedDB 로그 확인
+
+### 0. IndexedDB로 PDF 파일 영구 저장 ✅ (Save Point 96 - 타이밍 버그 수정됨)
 - **핵심 해결**: 시스템 등록 후 재진입 시에도 PDF를 열 수 있도록 완전 해결!
 - **문제**: localStorage는 File 객체를 저장할 수 없어서 재진입 시 PDF를 열 수 없었음
 - **해결책**: IndexedDB 사용으로 File 객체를 브라우저에 영구 저장
@@ -25,6 +50,7 @@
   2. **시스템 등록**: localStorage에 메타데이터만 저장 (기존 방식 유지)
   3. **프로젝트 재진입**: IndexedDB에서 PDF 파일 복원 → 실제 File 객체 사용 가능
   4. **PDF 열기**: 파란색 "보기" 버튼 → PDF 팝업 정상 작동 ✅
+- **Save Point 97 수정**: 비동기 타이밍 문제 해결로 재진입 시 파란색 버튼 정상 표시
 - **장점**:
   - ✅ 드로잉 재업로드 불필요
   - ✅ 브라우저 새로고침 후에도 PDF 유지
