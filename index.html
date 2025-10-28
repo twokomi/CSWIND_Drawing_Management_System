@@ -955,10 +955,14 @@
                 </div>
 
                 <!-- 통계 정보 -->
-                <div class="grid grid-cols-3 gap-4 mb-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div class="grid grid-cols-4 gap-4 mb-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
                     <div class="text-center">
                         <div id="unmatched-total-count" class="text-2xl font-bold text-orange-600">0</div>
-                        <div class="text-sm text-gray-600">매칭 실패</div>
+                        <div class="text-sm text-gray-600">고유 도면번호</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="unmatched-duplicate-count" class="text-2xl font-bold text-gray-500">0</div>
+                        <div class="text-sm text-gray-600">중복 제거됨</div>
                     </div>
                     <div class="text-center">
                         <div id="unmatched-selected-count" class="text-2xl font-bold text-blue-600">0</div>
@@ -6748,7 +6752,7 @@
             console.log('📋 매칭 실패 아이템 표시 시작');
             
             // 매칭 실패한 아이템 필터링 (Number가 있고, E로 시작하며, hasDrawing이 false인 항목)
-            const unmatchedItems = salesBOMData.filter(item => {
+            const allUnmatchedItems = salesBOMData.filter(item => {
                 if (!item.number || item.number === '') return false;
                 const numberUpper = item.number.toString().trim().toUpperCase();
                 // E로 시작하는 도면번호만 필터링 (GST 등은 제외)
@@ -6756,7 +6760,21 @@
                 return !item.hasDrawing;
             });
             
-            console.log(`📊 매칭 실패 아이템: ${unmatchedItems.length}개`);
+            console.log(`📊 매칭 실패 아이템 (중복 포함): ${allUnmatchedItems.length}개`);
+            
+            // 🔥 Number 기준으로 중복 제거
+            const uniqueNumberMap = new Map();
+            allUnmatchedItems.forEach(item => {
+                const number = item.number.toString().trim();
+                if (!uniqueNumberMap.has(number)) {
+                    uniqueNumberMap.set(number, item);
+                }
+            });
+            
+            const unmatchedItems = Array.from(uniqueNumberMap.values());
+            const duplicateCount = allUnmatchedItems.length - unmatchedItems.length;
+            
+            console.log(`📊 고유 도면번호: ${unmatchedItems.length}개 (중복 ${duplicateCount}개 제거)`);
             
             if (unmatchedItems.length === 0) {
                 // 매칭 실패 아이템이 없으면 섹션 숨김
@@ -6769,6 +6787,7 @@
             
             // 통계 업데이트
             document.getElementById('unmatched-total-count').textContent = unmatchedItems.length;
+            document.getElementById('unmatched-duplicate-count').textContent = duplicateCount;
             document.getElementById('unmatched-count-badge').textContent = `${unmatchedItems.length}개 누락`;
             document.getElementById('unmatched-selected-count').textContent = '0';
             document.getElementById('unmatched-after-delete-count').textContent = unmatchedItems.length;
@@ -6908,12 +6927,25 @@
             console.log('📤 매칭 실패 아이템 Excel 내보내기 시작');
             
             // 현재 표시된 매칭 실패 아이템 가져오기
-            const unmatchedItems = salesBOMData.filter(item => {
+            const allUnmatchedItems = salesBOMData.filter(item => {
                 if (!item.number || item.number === '') return false;
                 const numberUpper = item.number.toString().trim().toUpperCase();
                 if (!numberUpper.startsWith('E')) return false;
                 return !item.hasDrawing;
             });
+            
+            // 🔥 Number 기준으로 중복 제거 (Excel 내보내기도 중복 제거 적용)
+            const uniqueNumberMap = new Map();
+            allUnmatchedItems.forEach(item => {
+                const number = item.number.toString().trim();
+                if (!uniqueNumberMap.has(number)) {
+                    uniqueNumberMap.set(number, item);
+                }
+            });
+            
+            const unmatchedItems = Array.from(uniqueNumberMap.values());
+            
+            console.log(`📤 Excel 내보내기: ${unmatchedItems.length}개 (중복 ${allUnmatchedItems.length - unmatchedItems.length}개 제거)`);
             
             if (unmatchedItems.length === 0) {
                 alert('내보낼 매칭 실패 아이템이 없습니다.');
