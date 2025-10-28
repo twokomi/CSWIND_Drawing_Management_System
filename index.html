@@ -2622,9 +2622,20 @@
         function saveDrawingFile(projectId, bomNumber, fileName, file) {
             return new Promise((resolve, reject) => {
                 if (!db) {
+                    console.error('❌ IndexedDB가 초기화되지 않았습니다!');
                     reject(new Error('IndexedDB not initialized'));
                     return;
                 }
+                
+                console.log(`💾 IndexedDB 저장 시도: ${projectId}-${bomNumber} (${fileName})`);
+                console.log(`📊 파일 정보:`, {
+                    projectId,
+                    bomNumber,
+                    fileName,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    isFile: file instanceof File
+                });
                 
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const objectStore = transaction.objectStore(STORE_NAME);
@@ -2639,8 +2650,14 @@
                 };
                 
                 const request = objectStore.put(data);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    console.log(`✅ IndexedDB 저장 성공: ${projectId}-${bomNumber}`);
+                    resolve();
+                };
+                request.onerror = () => {
+                    console.error(`❌ IndexedDB 저장 실패: ${projectId}-${bomNumber}`, request.error);
+                    reject(request.error);
+                };
             });
         }
         
@@ -2695,9 +2712,44 @@
             });
         }
         
+        // 🔍 IndexedDB 전체 데이터 확인 (디버깅용)
+        function debugIndexedDB() {
+            if (!db) {
+                console.error('❌ IndexedDB가 초기화되지 않았습니다!');
+                return;
+            }
+            
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(STORE_NAME);
+            const request = objectStore.getAll();
+            
+            request.onsuccess = () => {
+                const allData = request.result || [];
+                console.log('🔍 ===== IndexedDB 전체 데이터 =====');
+                console.log(`📊 총 ${allData.length}개 항목 저장됨`);
+                allData.forEach((data, index) => {
+                    console.log(`  ${index + 1}. ${data.id}`);
+                    console.log(`     - projectId: ${data.projectId}`);
+                    console.log(`     - bomNumber: ${data.bomNumber}`);
+                    console.log(`     - fileName: ${data.fileName}`);
+                    console.log(`     - file: ${data.file instanceof File ? 'File 객체 ✅' : '❌ 없음'}`);
+                    console.log(`     - savedAt: ${data.savedAt}`);
+                });
+                console.log('🔍 ================================');
+            };
+            request.onerror = () => {
+                console.error('❌ IndexedDB 데이터 조회 실패:', request.error);
+            };
+        }
+        
+        // 전역에 디버깅 함수 등록
+        window.debugIndexedDB = debugIndexedDB;
+        
         // 페이지 로드 시 IndexedDB 초기화
         document.addEventListener('DOMContentLoaded', () => {
-            initIndexedDB().catch(err => {
+            initIndexedDB().then(() => {
+                console.log('✅ IndexedDB 초기화 완료 - debugIndexedDB() 함수로 데이터 확인 가능');
+            }).catch(err => {
                 console.error('❌ IndexedDB 초기화 실패:', err);
             });
         });
