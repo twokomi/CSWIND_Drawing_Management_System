@@ -6800,6 +6800,24 @@
                 updateProjectListDisplay();
             }
             
+            // 🔥 중요: 시스템 등록 후 현재 화면의 salesBOMData를 저장된 데이터로 동기화
+            // 이렇게 하지 않으면 화면에 표시되는 BOM 데이터와 저장된 데이터가 불일치하여
+            // drawingFile 객체가 여전히 메모리에 남아있어 "보기" 버튼이 잘못 표시됨
+            salesBOMData = selectedProjectForAnalysis.bomData.map(item => ({
+                ...item,
+                children: [],
+                parent: null,
+                isVisible: item.depth === 0 || item.isVisible
+            }));
+            
+            // BOM 계층 구조 재구성
+            buildBOMHierarchySales();
+            
+            // BOM 테이블 다시 렌더링 (drawingFile 없는 상태로 표시)
+            displayBOMTableSales();
+            
+            console.log('✅ 시스템 등록 후 BOM 데이터 동기화 완료');
+            
             // 시스템 등록 섹션 숨기기
             const systemRegisterSection = document.getElementById('system-register-section-sales');
             if (systemRegisterSection) {
