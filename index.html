@@ -391,6 +391,38 @@
             background: #94a3b8;
         }
 
+        /* 검색 결과 하이라이트 스타일 */
+        @keyframes searchPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.7);
+                background-color: #fed7aa;
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(251, 146, 60, 0);
+                background-color: #fdba74;
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(251, 146, 60, 0);
+                background-color: #fed7aa;
+            }
+        }
+
+        [data-search-highlight="true"] {
+            background-color: #fed7aa !important;
+            border: 3px solid #fb923c !important;
+            box-shadow: 0 4px 12px rgba(251, 146, 60, 0.5), 
+                        inset 0 0 0 1px rgba(251, 146, 60, 0.3) !important;
+            animation: searchPulse 2s ease-in-out 2;
+            position: relative;
+            z-index: 10;
+        }
+
+        [data-search-highlight="true"] td {
+            background-color: transparent !important;
+            font-weight: 600;
+            color: #7c2d12;
+        }
+
         /* BOM 트리 테이블 스타일 */
         .bom-tree-row {
             border-bottom: 1px solid #e5e7eb;
@@ -4032,8 +4064,7 @@
             setTimeout(() => {
                 const row = document.getElementById(`row-${item.id}`);
                 if (row) {
-                    // 하이라이트 추가
-                    row.classList.add('bg-yellow-200', 'border-4', 'border-yellow-500');
+                    // 강렬한 하이라이트 추가 (CSS로 스타일 자동 적용)
                     row.setAttribute('data-search-highlight', 'true');
                     
                     // 화면 중앙으로 스크롤
@@ -4042,7 +4073,7 @@
                     // 결과 정보 업데이트
                     const resultInfo = document.getElementById('search-result-info');
                     if (resultInfo) {
-                        resultInfo.innerHTML = `<span class="text-blue-600 font-medium"><i class="fas fa-map-marker-alt mr-1"></i>${index + 1} / ${searchResults.length}</span>`;
+                        resultInfo.innerHTML = `<span class="text-orange-600 font-bold"><i class="fas fa-search-location mr-1"></i>${index + 1} / ${searchResults.length}</span>`;
                     }
                     
                     console.log(`✅ 검색 결과 표시: ${item.number} (${index + 1}/${searchResults.length})`);
