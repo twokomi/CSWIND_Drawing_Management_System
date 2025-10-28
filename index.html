@@ -6163,30 +6163,16 @@
             
             const indent = '&nbsp;'.repeat(item.depth * 4);
             
-            // 드로잉 셀 생성 로직
+            // 드로잉 셀 생성 로직 (Save Point 87 스타일 - 단순하고 명확)
             let drawingCell;
             if (item.hasDrawing) {
-                // drawingFile이 실제 File 객체인지 확인 (instanceof File)
-                const hasValidFile = item.drawingFile && (item.drawingFile instanceof File || item.drawingFile instanceof Blob);
-                
-                // 디버깅: 첫 5개 항목의 드로잉 상태 로그
-                if (salesBOMData.indexOf(item) < 5) {
-                    console.log(`🔍 드로잉 버튼 생성 (${item.number}):`, {
-                        hasDrawing: item.hasDrawing,
-                        drawingFile: item.drawingFile,
-                        drawingFileType: item.drawingFile ? typeof item.drawingFile : 'null',
-                        hasValidFile: hasValidFile,
-                        drawingFileName: item.drawingFileName
-                    });
-                }
-                
-                if (hasValidFile) {
+                if (item.drawingFile && (item.drawingFile instanceof File || item.drawingFile instanceof Blob)) {
                     // 실제 파일 객체가 있는 경우 - "보기" 버튼 표시
                     drawingCell = `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>`;
                 } else if (item.drawingFileName) {
-                    // 파일명만 있는 경우 - 재업로드 안내 버튼
-                    const safeFileName = item.drawingFileName.replace(/'/g, "\\'");
-                    drawingCell = `<button onclick="showDrawingNotAvailableMessage('${safeFileName}', '${item.number}')" class="text-amber-600 hover:text-amber-800 text-xs px-2 py-1 bg-amber-50 rounded hover:bg-amber-100" title="파일은 재업로드가 필요합니다">📄 ${item.drawingFileName.substring(0, 12)}...</button>`;
+                    // 파일명만 있는 경우 - 초록색 텍스트로 표시 (Save Point 87 방식)
+                    const shortName = item.drawingFileName.substring(0, 15);
+                    drawingCell = `<span class="text-green-600 text-xs" title="${item.drawingFileName}">✓ ${shortName}...</span>`;
                 } else {
                     // hasDrawing은 true인데 파일 정보가 없음
                     drawingCell = `<span class="text-green-600 text-xs">✓ 연결됨</span>`;
