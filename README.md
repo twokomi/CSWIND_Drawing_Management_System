@@ -1,15 +1,38 @@
-# CSWIND MTO 시스템 - Save Point 98
+# CSWIND MTO 시스템 - Save Point 99
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **🎉 최신 배포 (Save Point 98)**: https://ae747f50.cswind-mto.pages.dev
+- **🎉 최신 배포 (Save Point 99)**: https://f4ac8b52.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 98 기준)
+## ✅ 현재 완료된 기능 (Save Point 99 기준)
+
+### 0. 메인 네비게이션 탭 전환 수정 ✅ (CRITICAL FIX - Save Point 99!)
+- **발견된 문제**: 배포 환경에서 대시보드, 프로젝트 관리 등 메인 네비게이션 탭 전환 불가
+- **근본 원인**: 
+  - 메인 네비게이션 버튼들에 대한 클릭 이벤트 리스너가 완전히 누락됨
+  - HTML에 버튼은 존재하지만 JavaScript에서 이벤트 처리 코드 없음
+- **해결책**:
+  - DOMContentLoaded에 네비게이션 탭 전환 이벤트 리스너 추가
+  - `querySelectorAll('.nav-tab')`로 모든 네비게이션 버튼 선택
+  - 클릭 시 탭 활성화 스타일 전환 및 컨텐츠 표시/숨김 처리
+- **구현 내용**:
+  1. 모든 `.nav-tab` 버튼에 클릭 이벤트 리스너 등록
+  2. 클릭 시 모든 탭 비활성화 → 선택된 탭만 활성화
+  3. 모든 `.tab-content` 숨김 → 선택된 컨텐츠만 표시
+  4. 콘솔 로그로 디버깅 가능
+- **동작 확인**:
+  - ✅ 대시보드 탭 클릭 → `tab-dashboard` 표시
+  - ✅ 프로젝트 관리 탭 클릭 → `tab-projects` 표시
+  - ✅ BOM 분석 탭 클릭 → `tab-bom` 표시
+  - ✅ 서플라이어 탭 클릭 → `tab-suppliers` 표시
+  - ✅ PO 관리 탭 클릭 → `tab-mto` 표시
+
+## ✅ 현재 완료된 기능 (Save Point 98~99 통합)
 
 ### 0. 시스템 등록 시 drawingFile 유지 ✅ (CRITICAL FIX - Save Point 98!)
 - **발견된 문제**: 시스템 등록 직후 파란색 "보기" 버튼이 초록색 텍스트로 변경됨
