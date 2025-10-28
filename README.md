@@ -5,8 +5,8 @@
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **최신 배포 (Save Point 96)**: https://78e941d6.cswind-mto.pages.dev
-- **개발 서버 (Sandbox - Save Point 98)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+- **🎉 최신 배포 (Save Point 98)**: https://ae747f50.cswind-mto.pages.dev
+- **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
 ## ✅ 현재 완료된 기능 (Save Point 98 기준)
