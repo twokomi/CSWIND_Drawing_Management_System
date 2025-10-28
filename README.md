@@ -1,17 +1,34 @@
-# CSWIND MTO 시스템 - Save Point 94
+# CSWIND MTO 시스템 - Save Point 95
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **최신 배포 (Save Point 94)**: https://c87348f0.cswind-mto.pages.dev
+- **최신 배포 (Save Point 95)**: https://775e9484.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 94 기준)
+## ✅ 현재 완료된 기능 (Save Point 95 기준)
 
-### 0. 시스템 등록 후 BOM 데이터 동기화 ✅ (UPDATED - Save Point 94!)
+### 0. Save Point 87 스타일 드로잉 표시 방식 복원 ✅ (UPDATED - Save Point 95!)
+- **변경 사항**: 복잡한 버튼 대신 단순하고 명확한 텍스트 표시 방식으로 전환
+- **드로잉 표시 로직**:
+  - `drawingFile` 있음 (File 객체) → 파란색 "📄 보기" 버튼 (클릭 시 PDF 팝업)
+  - `drawingFileName`만 있음 → 초록색 텍스트 "✓ E0004954053-00..." (파일명 툴팁)
+  - `hasDrawing`만 true → 초록색 "✓ 연결됨"
+  - 드로잉 없음 → 회색 "없음"
+- **장점**:
+  - ✅ Save Point 87~89에서 작동했던 검증된 방식
+  - ✅ 시스템 등록 후 명확한 시각적 구분
+  - ✅ 사용자 혼란 최소화 (클릭 불가능한 것은 버튼으로 보이지 않음)
+  - ✅ 도면 검색 (Ctrl+F) 기능 유지
+- **사용자 경험**:
+  - 시스템 등록 전: 파란색 "보기" 버튼으로 즉시 PDF 확인 가능
+  - 시스템 등록 후: 초록색 텍스트로 어떤 도면이 매칭되었는지 확인 가능
+  - 드로잉 재업로드 시: 다시 파란색 "보기" 버튼으로 변경
+
+### 0. 시스템 등록 후 BOM 데이터 동기화 ✅ (Save Point 94)
 - **문제**: 시스템 등록 직후 화면에서 드로잉 "보기" 버튼이 여전히 표시되지만 클릭 시 작동하지 않음
 - **원인**: 
   - `removeBOMCircularReferences()`로 새로운 BOM 배열 생성 시 `drawingFile` 제거
