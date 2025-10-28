@@ -1,4 +1,4 @@
-# CSWIND MTO 시스템 - Save Point 97
+# CSWIND MTO 시스템 - Save Point 98
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
@@ -6,12 +6,37 @@
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
 - **최신 배포 (Save Point 96)**: https://78e941d6.cswind-mto.pages.dev
-- **개발 서버 (Sandbox - Save Point 97)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+- **개발 서버 (Sandbox - Save Point 98)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 97 기준)
+## ✅ 현재 완료된 기능 (Save Point 98 기준)
 
-### 0. IndexedDB 비동기 타이밍 수정 ✅ (CRITICAL FIX - Save Point 97!)
+### 0. 시스템 등록 시 drawingFile 유지 ✅ (CRITICAL FIX - Save Point 98!)
+- **발견된 문제**: 시스템 등록 직후 파란색 "보기" 버튼이 초록색 텍스트로 변경됨
+- **근본 원인**: 
+  - Save Point 94의 BOM 동기화 로직이 `drawingFile: null`로 명시적 설정 (라인 6974)
+  - 이 로직은 IndexedDB 도입 이전에 localStorage의 한계를 해결하기 위해 만들어짐
+  - Save Point 96에서 IndexedDB 도입 후 이 동기화 로직이 오히려 문제를 일으킴
+- **해결책**:
+  - **시스템 등록 후 BOM 동기화 로직 전체 제거** (라인 6958~6990)
+  - **drawingFile 객체를 메모리에 유지**
+  - IndexedDB에 이미 PDF 파일이 저장되어 있으므로 안전하게 유지 가능
+- **결과**:
+  - ✅ 시스템 등록 직후에도 파란색 "📄 보기" 버튼 유지
+  - ✅ 시스템 등록 직후에도 PDF 열기 가능
+  - ✅ 프로젝트 재진입 시 IndexedDB에서 파일 복원
+  - ✅ 일관된 사용자 경험 (업로드 → 등록 → 재진입 모두 동일)
+- **사용자 워크플로우**:
+  ```
+  1. 드로잉 업로드 → 파란색 "보기" 버튼 → PDF 팝업 ✅
+  2. 시스템 등록 → 파란색 "보기" 버튼 유지 ✅ (이전: 초록색 텍스트로 변경 ❌)
+  3. PDF 열기 테스트 → 정상 작동 ✅
+  4. 프로젝트 리스트로 나가기
+  5. 등록된 프로젝트 재진입 → 파란색 "보기" 버튼 표시 ✅ (IndexedDB 복원)
+  6. PDF 열기 테스트 → 정상 작동 ✅
+  ```
+
+### 0. IndexedDB 비동기 타이밍 수정 ✅ (Save Point 97)
 - **발견된 문제**: Save Point 96 구현 후에도 재진입 시 초록색 텍스트만 표시되는 버그
 - **근본 원인**: 
   - `displayBOMTableSales()`가 IndexedDB 복원 **이전**에 호출됨 (라인 3484)
@@ -24,17 +49,6 @@
 - **강화된 디버깅 로그**:
   - `loadAllDrawingFiles()`: IndexedDB 쿼리 시작/성공, 각 파일의 File 객체 여부 출력
   - `createBOMTableRowSales()`: `hasDrawing`이 true인 모든 항목의 상태 출력 (File/Blob 객체 여부 명시)
-- **예상 결과**:
-  - ✅ 재진입 시 IndexedDB에서 File 객체 완전 복원
-  - ✅ 파란색 "📄 보기" 버튼 정상 표시
-  - ✅ PDF 열기 기능 100% 작동
-- **테스트 시나리오**:
-  1. 프로젝트 생성 → BOM 업로드 → 드로잉 매칭 → 시스템 등록
-  2. 프로젝트 리스트로 나가기
-  3. 등록된 프로젝트 재진입
-  4. 드로잉 컬럼에 파란색 "보기" 버튼 확인 (초록색 텍스트 ❌)
-  5. "보기" 버튼 클릭 → PDF 팝업 정상 작동 확인
-  6. 브라우저 콘솔에서 IndexedDB 로그 확인
 
 ### 0. IndexedDB로 PDF 파일 영구 저장 ✅ (Save Point 96 - 타이밍 버그 수정됨)
 - **핵심 해결**: 시스템 등록 후 재진입 시에도 PDF를 열 수 있도록 완전 해결!
