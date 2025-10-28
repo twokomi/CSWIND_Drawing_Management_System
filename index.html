@@ -6748,12 +6748,24 @@
             // BOM 데이터에서 순환 참조 제거 후 저장
             selectedProjectForAnalysis.bomData = removeBOMCircularReferences(salesBOMData);
             
-            // 드로잉 패키지 정보 저장 (File 객체는 제외)
-            selectedProjectForAnalysis.drawingPackage = salesDrawingPackage.map(f => ({
-                name: f.name,
-                size: f.size,
-                type: f.type
-            }));
+            // 드로잉 패키지 정보 저장 (File 객체는 제외하고 BOM 매칭 정보 포함)
+            selectedProjectForAnalysis.drawingPackage = salesDrawingPackage.map(f => {
+                // 파일 이름에서 BOM Number 추출 (예: E0004954053-00.pdf → E0004954053)
+                const bomNumber = f.name.replace(/[-_].*\.pdf$/i, '').trim();
+                
+                // 해당 BOM Number를 가진 항목 찾기
+                const matchedBomItem = salesBOMData.find(item => 
+                    item.number && item.number.includes(bomNumber)
+                );
+                
+                return {
+                    name: f.name,
+                    fileName: f.name,
+                    size: f.size,
+                    type: f.type,
+                    bomNumber: matchedBomItem ? matchedBomItem.number : bomNumber
+                };
+            });
             
             // 프로젝트 리스트 업데이트
             const projectIndex = salesProjectList.findIndex(p => p.id === selectedProjectForAnalysis.id);
