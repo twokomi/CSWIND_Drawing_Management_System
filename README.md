@@ -1,17 +1,45 @@
-# CSWIND MTO 시스템 - Save Point 95
+# CSWIND MTO 시스템 - Save Point 96
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **최신 배포 (Save Point 95)**: https://775e9484.cswind-mto.pages.dev
+- **최신 배포 (Save Point 96)**: https://78e941d6.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 95 기준)
+## ✅ 현재 완료된 기능 (Save Point 96 기준)
 
-### 0. Save Point 87 스타일 드로잉 표시 방식 복원 ✅ (UPDATED - Save Point 95!)
+### 0. IndexedDB로 PDF 파일 영구 저장 ✅ (UPDATED - Save Point 96!)
+- **핵심 해결**: 시스템 등록 후 재진입 시에도 PDF를 열 수 있도록 완전 해결!
+- **문제**: localStorage는 File 객체를 저장할 수 없어서 재진입 시 PDF를 열 수 없었음
+- **해결책**: IndexedDB 사용으로 File 객체를 브라우저에 영구 저장
+- **IndexedDB 구조**:
+  - 데이터베이스: `cswind-mto-db`
+  - 스토어: `drawing-files`
+  - 키: `projectId-bomNumber`
+  - 저장 데이터: { projectId, bomNumber, fileName, file (File 객체), savedAt }
+- **동작 방식**:
+  1. **드로잉 업로드 시**: PDF 파일을 IndexedDB에 자동 저장
+  2. **시스템 등록**: localStorage에 메타데이터만 저장 (기존 방식 유지)
+  3. **프로젝트 재진입**: IndexedDB에서 PDF 파일 복원 → 실제 File 객체 사용 가능
+  4. **PDF 열기**: 파란색 "보기" 버튼 → PDF 팝업 정상 작동 ✅
+- **장점**:
+  - ✅ 드로잉 재업로드 불필요
+  - ✅ 브라우저 새로고침 후에도 PDF 유지
+  - ✅ Save Point 88 이전 방식과 동일한 사용자 경험
+  - ✅ 도면 검색 (Ctrl+F) 기능 유지
+- **사용자 워크플로우**:
+  ```
+  1. 드로잉 업로드 → 파란색 "보기" 버튼 → PDF 팝업 ✅
+  2. 시스템 등록
+  3. 프로젝트 리스트 돌아가기
+  4. 등록된 프로젝트 다시 선택
+  5. 파란색 "보기" 버튼 → PDF 팝업 ✅ (드로잉 재업로드 불필요!)
+  ```
+
+### 0. Save Point 87 스타일 드로잉 표시 방식 ✅ (Save Point 95)
 - **변경 사항**: 복잡한 버튼 대신 단순하고 명확한 텍스트 표시 방식으로 전환
 - **드로잉 표시 로직**:
   - `drawingFile` 있음 (File 객체) → 파란색 "📄 보기" 버튼 (클릭 시 PDF 팝업)
