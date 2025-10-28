@@ -1,4 +1,4 @@
-# CSWIND MTO 시스템 - Save Point 92
+# CSWIND MTO 시스템 - Save Point 93
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
@@ -7,23 +7,29 @@
 - **개발 서버**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 92 기준)
+## ✅ 현재 완료된 기능 (Save Point 93 기준)
 
-### 0. 시스템 등록 후 드로잉 링크 완전 보존 ✅ (UPDATED - Save Point 92!)
-- **문제 해결**: 시스템 등록 후 프로젝트 재진입 시 드로잉 링크가 "없음"으로 표시되던 문제 완전 수정
-- **드로잉 패키지 저장 개선**:
-  - 파일 메타데이터(name, size, type) 저장
-  - **BOM Number 매칭 정보 함께 저장** (NEW!)
-  - 파일명에서 BOM Number 추출 로직 추가
-- **드로잉 메타데이터 복원**:
-  - 저장된 드로잉 패키지에서 BOM Number 추출
-  - BOM 데이터와 매칭하여 `hasDrawing`, `drawingFileName` 속성 복원
-  - BOM 테이블 재렌더링으로 드로잉 "보기" 버튼 정상 표시
-- **Save Point 91 기능 보존**:
-  - `removeBOMCircularReferences()` 함수에서 `drawingFileName` 속성 유지
-  - localStorage 저장 시 드로잉 링크 정보 손실 방지
+### 0. 드로잉 파일 객체 유효성 검증 강화 ✅ (UPDATED - Save Point 93!)
+- **문제**: 시스템 등록 후 프로젝트 재진입 시 드로잉 "보기" 버튼은 표시되지만 클릭 시 경고창 발생
+  - 경고 내용: "브라우저 새로고침 또는 프로젝트 재진입으로 인해 파일 객체가 손실되었습니다"
+- **원인**: localStorage에는 File 객체를 저장할 수 없어서 프로젝트 재진입 시 `drawingFile` 손실
+- **해결책**:
+  - **`instanceof File` 체크 추가**: 버튼 생성 전에 실제 File/Blob 객체인지 확인
+  - **조건부 버튼 표시**:
+    - `drawingFile`이 유효한 File 객체 → 파란색 "📄 보기" 버튼 (클릭 시 PDF 팝업)
+    - `drawingFileName`만 있음 → 주황색 "📄 E000495..." 버튼 (클릭 시 재업로드 안내)
+  - **개선된 에러 처리**: `showPDFModalSales()` 함수에서 File 객체 유효성 검증 후 적절한 안내 메시지 표시
+- **사용자 경험 개선**:
+  - 재업로드가 필요한 파일은 amber 색상으로 구분 표시
+  - 클릭 시 명확한 안내 메시지와 해결 방법 제공
+  - 드로잉 패키지 재업로드 시 자동 매칭으로 빠른 복원
 
-## ✅ 현재 완료된 기능 (Save Point 90~92 통합)
+### 0. 시스템 등록 후 드로잉 링크 정보 보존 ✅ (Save Point 91~92)
+- **드로잉 메타데이터 저장**: `drawingFileName`, `hasDrawing` 속성 localStorage에 저장
+- **BOM Number 매칭 정보 저장**: 드로잉 패키지 저장 시 BOM Number 함께 저장
+- **재진입 시 메타데이터 표시**: 파일명 기반 버튼 표시로 어떤 도면이 매칭되었는지 확인 가능
+
+## ✅ 현재 완료된 기능 (Save Point 90~93 통합)
 
 ### 0. 도면 조회 (Find) 기능 ✅ (UPDATED!)
 - **단축키**: `Ctrl+F` (BOM 분석 결과 화면에서 사용 가능)
