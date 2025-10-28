@@ -4,7 +4,9 @@
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
-- **개발 서버**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+- **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
+- **최신 배포**: https://d6c205b0.cswind-mto.pages.dev
+- **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
 ## ✅ 현재 완료된 기능 (Save Point 93 기준)
