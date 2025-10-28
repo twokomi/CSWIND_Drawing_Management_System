@@ -591,129 +591,9 @@
     <main class="container mx-auto px-6 py-8">
         
         <!-- 대시보드 탭 -->
-        <div id="tab-dashboard" class="tab-content">
-            <!-- 통계 카드 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">활성 프로젝트</p>
-                            <p id="stat-projects" class="text-2xl font-bold text-gray-800">0</p>
-                        </div>
-                        <div class="bg-blue-100 p-3 rounded-full">
-                            <i class="fas fa-folder text-blue-600"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">총 BOM 아이템</p>
-                            <p id="stat-bom-items" class="text-2xl font-bold text-gray-800">0</p>
-                        </div>
-                        <div class="bg-green-100 p-3 rounded-full">
-                            <i class="fas fa-list text-green-600"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">등록된 서플라이어</p>
-                            <p id="stat-suppliers" class="text-2xl font-bold text-gray-800">0</p>
-                        </div>
-                        <div class="bg-purple-100 p-3 rounded-full">
-                            <i class="fas fa-truck text-purple-600"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">생성된 MTO</p>
-                            <p id="stat-mtos" class="text-2xl font-bold text-gray-800">0</p>
-                        </div>
-                        <div class="bg-orange-100 p-3 rounded-full">
-                            <i class="fas fa-box text-orange-600"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 빠른 작업 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-plus-circle text-blue-600 mr-2"></i>
-                        새 프로젝트 생성
-                    </h2>
-                    <form id="new-project-form">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">고객사명</label>
-                                <input type="text" id="customer-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: 현대중공업">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">타워 모델</label>
-                                <input type="text" id="tower-model" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: HVS-112-5.0MW">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">프로젝트 설명</label>
-                                <textarea id="project-description" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="프로젝트에 대한 상세 설명을 입력하세요"></textarea>
-                            </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
-                                <i class="fas fa-plus mr-2"></i>프로젝트 생성
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-chart-bar text-green-600 mr-2"></i>
-                        최근 활동
-                    </h2>
-                    <div id="recent-activities" class="space-y-3">
-                        <div class="text-gray-500 text-center py-8">
-                            <i class="fas fa-inbox text-4xl mb-2"></i>
-                            <p>아직 활동 내역이 없습니다.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 데이터 시각화 섹션 -->
-            <div class="mt-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                        <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
-                        데이터 분석 및 시각화
-                    </h2>
-                    <div class="flex space-x-2">
-                        <button id="refresh-charts-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                            <i class="fas fa-sync-alt mr-2"></i>차트 새로고침
-                        </button>
-                        <div class="relative dropdown">
-                            <button class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200">
-                                <i class="fas fa-download mr-2"></i>분석데이터 내보내기
-                                <i class="fas fa-chevron-down ml-2"></i>
-                            </button>
-                            <div class="dropdown-menu">
-                                <div class="dropdown-item" onclick="chartManager.exportChartData('projects')">
-                                    <i class="fas fa-folder mr-2"></i>프로젝트 분석 데이터
-                                </div>
-                                <div class="dropdown-item" onclick="chartManager.exportChartData('materials')">
-                                    <i class="fas fa-cubes mr-2"></i>자재 분석 데이터
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="dashboard-charts-container">
-                    <!-- 차트들이 동적으로 여기에 추가됩니다 -->
-                </div>
-            </div>
+        <!-- 🔥 대시보드 탭 완전 제거 - 프로젝트 관리 탭만 사용 -->
+        <div id="tab-dashboard" class="tab-content hidden">
+            <!-- 대시보드 섹션 제거됨 -->
         </div>
 
         <!-- 프로젝트 관리 탭 (Sales팀용) -->
@@ -4582,10 +4462,8 @@
         // Sales팀 프로젝트 데이터 초기화
         function initializeSalesProjectData() {
             try {
-                // 개발 단계에서 초기화 (Excel 실제 데이터 디버깅용)
-                localStorage.removeItem('cswind-sales-projects');
-                // localStorage.removeItem('cswind-projects'); // 혹시 다른 키도 있을 수 있음
-                // console.log('로컬스토리지 완전 초기화됨');
+                // 🔥 localStorage 초기화 제거 - 기존 데이터 유지
+                // 🔥 디버깅용 샘플 프로젝트 생성 제거
                 
                 const savedProjects = localStorage.getItem('cswind-sales-projects');
                 if (savedProjects) {
@@ -4593,133 +4471,9 @@
                     console.log('기존 프로젝트 데이터 복원됨:', salesProjectList.length, '개');
                 } else {
                     salesProjectList = [];
-                    console.log('새로운 프로젝트 리스트 시작');
-                
-                // 테스트용 프로젝트 생성
-                const debugProject = {
-                    id: 'debug-excel-project',
-                    name: 'Excel 데이터 디버깅 프로젝트',
-                    type: 'Onshore',
-                    customer: '디버깅용',
-                    startDate: '2024-01-01',
-                    endDate: '2024-12-31',
-                    description: 'Excel BOM 파일 들여쓰기 디버깅용',
-                    bomAnalyzed: false,
-                    drawingLinked: false,
-                    systemRegistered: false,
-                    createdAt: new Date().toISOString()
-                };
-                salesProjectList.push(debugProject);
-                saveProjectListToStorage();
-                console.log('✅ 디버깅용 프로젝트 생성 완료');
-                
-                // 6초 후 실제 Excel 형태의 데이터로 테스트
-                setTimeout(() => {
-                    console.log('🧪 실제 Excel BOM 데이터 패턴 시뮬레이션 시작');
-                    selectProjectForAnalysis(debugProject);
-                    
-                    // 2초 후 실제 Excel에서 나올 수 있는 데이터 패턴 테스트
-                    setTimeout(() => {
-                        console.log('🧪 실제 Excel BOM 데이터 생성 (사용자 스크린샷 기반)');
-                        
-                        // 🔥 사용자 실제 Excel 구조 반영 - 각 컬럼에 필요한 데이터가 차례로 배치
-                        // A:Depth | B:Name | C:Number | D:FindNumber | E:Version | F:Quantity | G:Unit | H:Weight | I:Material | J:Extra1 | K:Extra2
-                        const actualExcelData = [
-                            ['Depth', 'Name', 'Number', 'FindNumber', 'Version', 'Quantity', 'Unit', 'Weight', 'Material', 'Extra1', 'Extra2'], // 헤더
-                            ['0', 'Foundation', 'GST03315-001', '1', 'V01', '1', 'each', '100.0', 'Steel', 'Group1', 'Action1'],
-                            ['0', 'Structure', 'GST03320-000', '10', 'V02', '1', 'each', '50.0', 'Steel', 'Group2', 'Action2'],
-                            ['1', 'Documentation for steel tower supplier', 'E0005030033', '10', 'V00', '1', 'lot', '1.0', 'Document', 'Group3', 'Action3'],
-                            ['2', 'tower sections detail', 'E0003039487', '10', 'V09', '26.0', 'each', '26.0', 'Metal', 'Group4', 'Action4'],
-                            ['2', 'asm weld sockets A2-Box', 'E0005030037', '20', 'V00', '1', 'each', '1.0', 'Weld', 'Group5', 'Action5'],
-                            ['3', 'weld socket D40 M16', 'E0003039487', '10', 'V09', '2.0', 'each', '2.0', 'Socket', 'Group6', 'Action6'],
-                            ['2', 'asm weld sockets Plattform', 'E0005030035', '30', 'V00', '1', 'each', '1.0', 'Platform', 'Group7', 'Action7'],
-                            ['3', 'weld socket D40 M16', 'E0005476709', '20', '10.0', 'each', '10.0', 'Socket', 'Group8', 'Action8'],
-                            ['2', 'asm control system', 'E0005030036', '40', 'V00', '1', 'each', '1.0', 'Control', 'Group9', 'Action9'],
-                            ['3', 'weld socket detail', 'E0003039487', '20', 'V09', '1', 'each', '1.0', 'Detail', 'Group10', 'Action10']
-                        ];
-                        
-                        console.log('🧪 실제 Excel 패턴으로 processBOMDataSales 호출');
-                        processBOMDataSales(actualExcelData);
-                        
-                        // 🧪 드로잉 패키지 업로드 테스트 시뮬레이션 (5초 후)
-                        setTimeout(() => {
-                            console.log('🧪 드로잉 패키지 업로드 테스트 시뮬레이션 시작');
-                            
-                            // 🔥 실제 사용자 E 도면번호에 맞는 PDF 파일들 생성
-                            const mockPDFFiles = [
-                                { name: 'E0005030033-drawing-detail.pdf', type: 'application/pdf' }, // 매칭됨
-                                { name: 'E0003039487-assembly-plan.pdf', type: 'application/pdf' }, // 매칭됨 (여러 BOM 항목과 매칭)
-                                { name: 'E0005030037-electrical-box.pdf', type: 'application/pdf' }, // 매칭됨 
-                                { name: 'E0005030035-documentation.pdf', type: 'application/pdf' }, // 매칭됨
-                                { name: 'E0005030036-control-system.pdf', type: 'application/pdf' }, // 매칭됨
-                                { name: 'E0005476709-tower-base.pdf', type: 'application/pdf' }, // 매칭됨
-                                { name: 'GST03315-foundation.pdf', type: 'application/pdf' }, // GST로 시작 (매칭 안됨)
-                                { name: 'GST03320-structure.pdf', type: 'application/pdf' }, // GST로 시작 (매칭 안됨)
-                                { name: 'general-specification.pdf', type: 'application/pdf' }, // 일반 파일 (매칭 안됨)
-                                { name: 'E9999999999-not-in-bom.pdf', type: 'application/pdf' } // BOM에 없는 E 도면 (매칭 안됨)
-                            ];
-                            
-                            console.log('🧪 Mock PDF 파일들:', mockPDFFiles.map(f => f.name));
-                            
-                            // 매칭 로직 테스트
-                            let matchedCount = 0;
-                            let totalBOMItems = 0;
-                            
-                            console.log('📊 BOM-PDF 매칭 테스트 시작...');
-                            
-                            salesBOMData.forEach((bomItem, index) => {
-                                if (!bomItem.number || bomItem.number === '') return;
-                                
-                                totalBOMItems++;
-                                const bomNumber = bomItem.number.toString().trim();
-                                
-                                console.log(`🔍 BOM 항목 ${index}: "${bomItem.name}" - Number: "${bomNumber}" (FindNumber: "${bomItem.findNumber}")`);
-                                
-                                if (!bomNumber.toUpperCase().startsWith('E')) {
-                                    console.log(`⏭️ E로 시작하지 않는 Number 스킵: "${bomNumber}" (GST 또는 기타 타입)`);
-                                    return;
-                                }
-                                
-                                const drawingNumberBase = bomNumber.split('-')[0].trim();
-                                console.log(`🎯 추출된 도면번호 베이스: "${drawingNumberBase}"`);
-                                
-                                const matchedPDF = mockPDFFiles.find(pdfFile => {
-                                    const fileNameUpper = pdfFile.name.toUpperCase();
-                                    const eMatch = fileNameUpper.match(/E[^\\s\\-_]*[\\d]+/);
-                                    if (eMatch) {
-                                        const extractedNumber = eMatch[0];
-                                        const match = extractedNumber === drawingNumberBase.toUpperCase();
-                                        console.log(`📄 파일 "${pdfFile.name}" - 추출: "${extractedNumber}" vs BOM: "${drawingNumberBase}" -> ${match ? '✅ 매칭!' : '❌'}`);
-                                        return match;
-                                    }
-                                    return false;
-                                });
-                                
-                                if (matchedPDF) {
-                                    bomItem.hasDrawing = true;
-                                    bomItem.drawingFile = matchedPDF;
-                                    bomItem.drawingFileName = matchedPDF.name;
-                                    matchedCount++;
-                                    console.log(`✅ 매칭 성공: "${bomItem.name}" (${bomNumber}) ↔ "${matchedPDF.name}"`);
-                                } else {
-                                    bomItem.hasDrawing = false;
-                                    bomItem.drawingFile = null;
-                                    bomItem.drawingFileName = '';
-                                    console.log(`❌ 매칭 실패: "${bomItem.name}" (${bomNumber}) - 해당하는 PDF 없음`);
-                                }
-                            });
-                            
-                            // BOM 테이블 다시 그리기
-                            displayBOMTableSales();
-                            
-                            const successRate = totalBOMItems > 0 ? (matchedCount / totalBOMItems * 100).toFixed(1) : 0;
-                            console.log(`🎯 매칭 테스트 완료: ${matchedCount}/${totalBOMItems} (${successRate}%)`);
-                            
-                        }, 5000);
-                        
-                    }, 2000);
-                }, 6000);
+                    console.log('새로운 프로젝트 리스트 시작 - 빈 배열 초기화');
                 }
+
                 
 
                 
