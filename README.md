@@ -5,7 +5,7 @@
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **🎉 최신 배포 (Save Point 103)**: https://1564153c.cswind-mto.pages.dev
+- **🎉 최신 배포 (Save Point 103.1)**: https://d5a6786f.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 
 ## ✅ 현재 완료된 기능 (Save Point 103 기준)
@@ -14,12 +14,15 @@
 - **사용자 요청**: 불필요한 대시보드 통계 섹션과 디버깅용 샘플 프로젝트 완전 삭제
 - **수정 사항**:
   - ❌ 대시보드 탭 컨텐츠 완전 제거 (통계 카드, 빠른 작업, 데이터 시각화)
-  - ❌ localStorage 초기화 코드 제거 (기존 프로젝트 보존)
+  - ❌ localStorage 초기화 코드 제거 (기존 프로젝트 보존) ✅ **프로젝트 영구 저장**
   - ❌ 디버깅용 샘플 프로젝트 생성 로직 제거 ("Excel 데이터 디버깅 프로젝트")
   - ❌ setTimeout 기반 BOM/드로잉 시뮬레이션 코드 제거 (140+ 라인)
+  - ✅ **앱 시작 시 디버깅 프로젝트 자동 필터링 및 삭제** (Save Point 103.1)
 - **결과**:
   - 깔끔한 프로젝트 초기 화면 (빈 프로젝트 리스트)
   - localStorage에 저장된 실제 프로젝트만 표시
+  - 브라우저 새로고침해도 프로젝트 유지됨 (정상 동작)
+  - 과거 localStorage에 남아있던 디버깅 샘플 자동 제거
   - 불필요한 테스트 코드 제거로 코드 품질 향상
   - 사용자가 직접 생성한 프로젝트만 관리
 
@@ -603,7 +606,7 @@ debugDrawingMap();
 ---
 
 **최종 업데이트**: 2025-10-28
-**버전**: Save Point 103
+**버전**: Save Point 103.1
 **상태**: 운영 준비 완료 ✅
 
 ## 🎮 단축키 가이드
