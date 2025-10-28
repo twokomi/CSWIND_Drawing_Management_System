@@ -1,17 +1,32 @@
-# CSWIND MTO 시스템 - Save Point 93
+# CSWIND MTO 시스템 - Save Point 94
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **최신 배포**: https://d6c205b0.cswind-mto.pages.dev
+- **최신 배포 (Save Point 94)**: https://c87348f0.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 - **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 93 기준)
+## ✅ 현재 완료된 기능 (Save Point 94 기준)
 
-### 0. 드로잉 파일 객체 유효성 검증 강화 ✅ (UPDATED - Save Point 93!)
+### 0. 시스템 등록 후 BOM 데이터 동기화 ✅ (UPDATED - Save Point 94!)
+- **문제**: 시스템 등록 직후 화면에서 드로잉 "보기" 버튼이 여전히 표시되지만 클릭 시 작동하지 않음
+- **원인**: 
+  - `removeBOMCircularReferences()`로 새로운 BOM 배열 생성 시 `drawingFile` 제거
+  - 하지만 화면의 `salesBOMData`는 여전히 이전 객체 참조
+  - 저장된 데이터와 메모리 데이터의 불일치 발생
+- **해결책**:
+  - **시스템 등록 직후 `salesBOMData` 동기화**: 저장된 데이터로 현재 메모리 갱신
+  - **BOM 테이블 즉시 재렌더링**: `displayBOMTableSales()` 호출
+  - **계층 구조 재구성**: `buildBOMHierarchySales()` 호출
+- **결과**:
+  - ✅ 시스템 등록 직후부터 주황색 "📄 파일명..." 버튼 정상 표시
+  - ✅ 화면과 저장된 데이터 완전 일치
+  - ✅ 혼란스러운 파란색 "보기" 버튼 제거
+
+### 0. 드로잉 파일 객체 유효성 검증 강화 ✅ (Save Point 93)
 - **문제**: 시스템 등록 후 프로젝트 재진입 시 드로잉 "보기" 버튼은 표시되지만 클릭 시 경고창 발생
   - 경고 내용: "브라우저 새로고침 또는 프로젝트 재진입으로 인해 파일 객체가 손실되었습니다"
 - **원인**: localStorage에는 File 객체를 저장할 수 없어서 프로젝트 재진입 시 `drawingFile` 손실
