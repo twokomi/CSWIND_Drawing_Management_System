@@ -2813,6 +2813,43 @@
             window.closePDFModal = closePDFModal;
             
             console.log('✅ Sales 함수들이 전역에 등록되었습니다.');
+            
+            // 🔥 메인 네비게이션 탭 전환 이벤트 리스너 추가
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.id.replace('nav-', 'tab-');
+                    console.log('🔄 탭 전환:', tabId);
+                    
+                    // 모든 탭 비활성화
+                    navTabs.forEach(t => {
+                        t.classList.remove('active', 'border-blue-600', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    
+                    // 선택된 탭 활성화
+                    this.classList.add('active', 'border-blue-600', 'text-blue-600');
+                    this.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // 모든 탭 컨텐츠 숨기기
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // 선택된 컨텐츠 표시
+                    const targetContent = document.getElementById(tabId);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        console.log('✅ 탭 컨텐츠 표시:', tabId);
+                    } else {
+                        console.error('❌ 탭 컨텐츠를 찾을 수 없음:', tabId);
+                    }
+                });
+            });
+            
+            console.log('✅ 메인 네비게이션 이벤트 리스너 등록 완료');
         });
         
         // 드로잉 폴더 선택 핸들러
