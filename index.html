@@ -5492,8 +5492,26 @@
         // Sales팀 PDF 모달 표시
         function showPDFModalSales(itemId) {
             const item = salesBOMData.find(i => i.id === itemId);
-            if (!item || !item.hasDrawing || !item.drawingFile) {
-                alert('도면 파일을 찾을 수 없습니다.');
+            if (!item) {
+                alert('BOM 항목을 찾을 수 없습니다.');
+                return;
+            }
+            
+            if (!item.hasDrawing) {
+                alert('이 항목에 연결된 도면이 없습니다.');
+                return;
+            }
+            
+            // drawingFile이 실제 File 객체인지 확인
+            const hasValidFile = item.drawingFile && (item.drawingFile instanceof File || item.drawingFile instanceof Blob);
+            
+            if (!hasValidFile) {
+                // 파일 객체가 없으면 재업로드 안내 메시지 표시
+                if (item.drawingFileName) {
+                    showDrawingNotAvailableMessage(item.drawingFileName, item.number);
+                } else {
+                    alert('도면 파일을 찾을 수 없습니다.');
+                }
                 return;
             }
             
@@ -6148,7 +6166,10 @@
             // 드로잉 셀 생성 로직
             let drawingCell;
             if (item.hasDrawing) {
-                if (item.drawingFile) {
+                // drawingFile이 실제 File 객체인지 확인 (instanceof File)
+                const hasValidFile = item.drawingFile && (item.drawingFile instanceof File || item.drawingFile instanceof Blob);
+                
+                if (hasValidFile) {
                     // 실제 파일 객체가 있는 경우 - "보기" 버튼 표시
                     drawingCell = `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>`;
                 } else if (item.drawingFileName) {
