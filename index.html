@@ -4468,6 +4468,21 @@
                 const savedProjects = localStorage.getItem('cswind-sales-projects');
                 if (savedProjects) {
                     salesProjectList = JSON.parse(savedProjects);
+                    
+                    // 🔥 디버깅용 샘플 프로젝트 자동 제거
+                    const beforeCount = salesProjectList.length;
+                    salesProjectList = salesProjectList.filter(p => 
+                        p.id !== 'debug-excel-project' && 
+                        !p.name?.includes('디버깅') && 
+                        !p.customer?.includes('디버깅')
+                    );
+                    
+                    if (beforeCount !== salesProjectList.length) {
+                        console.log(`🗑️ 디버깅 샘플 프로젝트 제거: ${beforeCount} → ${salesProjectList.length}개`);
+                        // localStorage에 즉시 저장하여 디버깅 프로젝트 영구 제거
+                        saveProjectListToStorage();
+                    }
+                    
                     console.log('기존 프로젝트 데이터 복원됨:', salesProjectList.length, '개');
                 } else {
                     salesProjectList = [];
