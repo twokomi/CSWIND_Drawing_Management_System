@@ -1,12 +1,36 @@
-# CSWIND MTO 시스템 - Save Point 103
+# CSWIND MTO 시스템 - Save Point 104
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **🎉 최신 배포 (Save Point 103.1)**: https://d5a6786f.cswind-mto.pages.dev
+- **🎉 최신 배포 (Save Point 104)**: https://acbbfea4.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
+
+## ✅ 현재 완료된 기능 (Save Point 104 기준)
+
+### 0. 매칭 실패 도면 관리 및 고객사 보고 기능 ✅ (Save Point 104!)
+- **사용자 요청**: 드로잉 매칭 실패 아이템을 관리하고 고객사에 보고할 수 있는 기능 추가
+- **새로운 기능**:
+  - ✅ **매칭 실패 아이템 자동 필터링**: E로 시작하는 도면번호 중 PDF가 매칭되지 않은 항목만 표시
+  - ✅ **체크박스 다중 선택**: 도면이 불필요한 항목을 선택하여 제거 가능
+  - ✅ **선택 삭제 기능**: 불필요한 항목을 BOM에서 완전히 제거
+  - ✅ **Excel 내보내기**: 최종 누락 도면 리스트를 CSV 파일로 내보내기
+  - ✅ **실시간 통계**: 매칭 실패 총 개수, 선택된 개수, 삭제 후 남을 개수 표시
+  - ✅ **BOM 헤더 구조 유지**: Depth, Name, Number, Version 등 전체 컬럼 정보 포함
+  - ✅ **UTF-8 BOM 인코딩**: Excel에서 한글 깨짐 없이 정상 표시
+- **사용 시나리오**:
+  1. BOM 업로드 + 드로잉 패키지 업로드
+  2. "매칭 실패 아이템" 섹션 자동 표시
+  3. 도면이 실제로 불필요한 항목 선택 후 삭제
+  4. "Excel로 내보내기" 버튼으로 고객사 보고용 파일 생성
+  5. CSV 파일을 고객사에 전달하여 누락된 도면 요청
+- **결과**:
+  - 도면 누락 상황을 체계적으로 관리
+  - 고객사 보고 프로세스 자동화
+  - 불필요한 항목 제거로 정확한 보고
+  - 프로젝트별 도면 누락 이력 관리 가능
 
 ## ✅ 현재 완료된 기능 (Save Point 103 기준)
 
@@ -606,7 +630,7 @@ debugDrawingMap();
 ---
 
 **최종 업데이트**: 2025-10-28
-**버전**: Save Point 103.1
+**버전**: Save Point 104
 **상태**: 운영 준비 완료 ✅
 
 ## 🎮 단축키 가이드
