@@ -6180,6 +6180,204 @@
             console.log('✅ BOM 계층 구조 생성 완료');
         }
 
+        // ===== 프로젝트 간 도면 추적 (Cross-Project Traceability) =====
+        
+        // 다른 프로젝트에 같은 도면이 있는지 확인
+        function checkDrawingInOtherProjects(drawingNumber) {
+            if (!drawingNumber || drawingNumber === '' || !selectedProjectForAnalysis) {
+                return '';
+            }
+            
+            // 현재 프로젝트 제외하고 모든 프로젝트 검색
+            const otherProjects = salesProjectList.filter(p => 
+                p.id !== selectedProjectForAnalysis.id && 
+                p.bomAnalyzed && 
+                p.bomData && 
+                Array.isArray(p.bomData)
+            );
+            
+            if (otherProjects.length === 0) {
+                return '';
+            }
+            
+            // 같은 도면번호를 가진 프로젝트 찾기
+            const projectsWithDrawing = [];
+            
+            otherProjects.forEach(project => {
+                const hasDrawing = project.bomData.some(item => 
+                    item.number && item.number.toString().trim() === drawingNumber.toString().trim()
+                );
+                
+                if (hasDrawing) {
+                    projectsWithDrawing.push({
+                        id: project.id,
+                        name: project.name,
+                        customer: project.customer,
+                        type: project.type
+                    });
+                }
+            });
+            
+            if (projectsWithDrawing.length === 0) {
+                return '';
+            }
+            
+            // 배지 생성
+            const projectNames = projectsWithDrawing.map(p => `• ${p.name} (${p.customer})`).join('\n');
+            const badge = `
+                <button 
+                    onclick="showCrossProjectModal('${drawingNumber.replace(/'/g, "\\'")}')" 
+                    class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs hover:bg-purple-200 transition"
+                    title="다른 프로젝트에서도 사용됨:\n${projectNames}">
+                    <i class="fas fa-link mr-1"></i>${projectsWithDrawing.length}
+                </button>
+            `;
+            
+            return badge;
+        }
+        
+        // 프로젝트 간 도면 사용 현황 모달 표시
+        function showCrossProjectModal(drawingNumber) {
+            console.log('🔗 프로젝트 간 도면 추적:', drawingNumber);
+            
+            // 같은 도면을 사용하는 모든 프로젝트 찾기 (현재 프로젝트 포함)
+            const projectsWithDrawing = [];
+            
+            salesProjectList.forEach(project => {
+                if (!project.bomAnalyzed || !project.bomData || !Array.isArray(project.bomData)) {
+                    return;
+                }
+                
+                const matchingItems = project.bomData.filter(item => 
+                    item.number && item.number.toString().trim() === drawingNumber.toString().trim()
+                );
+                
+                if (matchingItems.length > 0) {
+                    projectsWithDrawing.push({
+                        id: project.id,
+                        name: project.name,
+                        customer: project.customer,
+                        type: project.type,
+                        startDate: project.startDate,
+                        endDate: project.endDate,
+                        itemCount: matchingItems.length,
+                        hasDrawing: matchingItems.some(item => item.hasDrawing),
+                        isCurrent: project.id === selectedProjectForAnalysis.id
+                    });
+                }
+            });
+            
+            // 모달 HTML 생성
+            const modalHTML = `
+                <div id="cross-project-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeCrossProjectModal(event)">
+                    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden" onclick="event.stopPropagation()">
+                        <!-- 헤더 -->
+                        <div class="bg-purple-600 text-white px-6 py-4 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold flex items-center">
+                                    <i class="fas fa-link mr-2"></i>
+                                    프로젝트 간 도면 추적
+                                </h3>
+                                <p class="text-sm text-purple-100 mt-1">도면번호: ${drawingNumber}</p>
+                            </div>
+                            <button onclick="closeCrossProjectModal()" class="text-white hover:text-purple-200 text-2xl">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- 본문 -->
+                        <div class="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <p class="text-sm text-blue-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    이 도면은 <strong>${projectsWithDrawing.length}개 프로젝트</strong>에서 사용되고 있습니다.
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                ${projectsWithDrawing.map(project => `
+                                    <div class="border ${project.isCurrent ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} rounded-lg p-4 hover:shadow-md transition">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="flex-1">
+                                                <div class="flex items-center space-x-2 mb-1">
+                                                    <h4 class="font-semibold text-gray-800">${project.name}</h4>
+                                                    ${project.isCurrent ? '<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">현재 프로젝트</span>' : ''}
+                                                    ${project.hasDrawing ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs"><i class="fas fa-check mr-1"></i>도면 있음</span>' : '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>도면 없음</span>'}
+                                                </div>
+                                                <div class="text-sm text-gray-600">
+                                                    <span class="mr-3"><i class="fas fa-building mr-1"></i>${project.customer}</span>
+                                                    <span class="mr-3"><i class="fas fa-tag mr-1"></i>${project.type}</span>
+                                                    <span><i class="fas fa-cubes mr-1"></i>${project.itemCount}개 BOM 아이템</span>
+                                                </div>
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    <i class="fas fa-calendar mr-1"></i>${project.startDate} ~ ${project.endDate}
+                                                </div>
+                                            </div>
+                                            ${!project.isCurrent ? `
+                                                <button onclick="switchToProject('${project.id}')" class="ml-3 bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition">
+                                                    <i class="fas fa-external-link-alt mr-1"></i>이동
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- 푸터 -->
+                        <div class="bg-gray-50 px-6 py-4 flex justify-end">
+                            <button onclick="closeCrossProjectModal()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
+                                <i class="fas fa-times mr-2"></i>닫기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 모달 추가
+            const existingModal = document.getElementById('cross-project-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        // 모달 닫기
+        function closeCrossProjectModal(event) {
+            // 배경 클릭 시에만 닫기 (event가 있는 경우)
+            if (event && event.target.id !== 'cross-project-modal') {
+                return;
+            }
+            
+            const modal = document.getElementById('cross-project-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // 다른 프로젝트로 전환
+        function switchToProject(projectId) {
+            const project = salesProjectList.find(p => p.id === projectId);
+            if (!project) {
+                alert('프로젝트를 찾을 수 없습니다.');
+                return;
+            }
+            
+            if (!confirm(`"${project.name}" 프로젝트로 이동하시겠습니까?`)) {
+                return;
+            }
+            
+            // 모달 닫기
+            closeCrossProjectModal();
+            
+            // 프로젝트 선택 및 이동
+            selectProjectForAnalysis(project);
+            
+            // BOM & 드로잉 분석 화면으로 이동
+            showWorkflowStep('step-bom-drawing');
+        }
+
         // BOM 테이블 표시 (저장지점 86 방식)
         function displayBOMTableSales() {
             const tbody = document.getElementById('bom-tree-body-sales');
@@ -6211,21 +6409,49 @@
             
             // 드로잉 셀 생성 로직 (Save Point 87 스타일 - 단순하고 명확)
             let drawingCell;
+            
+            // 🔥 프로젝트 간 도면 추적 (Cross-Project Traceability)
+            const crossProjectBadge = checkDrawingInOtherProjects(item.number);
+            
             if (item.hasDrawing) {
                 if (item.drawingFile && (item.drawingFile instanceof File || item.drawingFile instanceof Blob)) {
                     // 실제 파일 객체가 있는 경우 - "보기" 버튼 표시
-                    drawingCell = `<button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>`;
+                    drawingCell = `
+                        <div class="flex items-center justify-center space-x-1">
+                            <button onclick="showPDFModalSales('${item.id}')" class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 bg-blue-100 rounded hover:bg-blue-200">📄 보기</button>
+                            ${crossProjectBadge}
+                        </div>
+                    `;
                 } else if (item.drawingFileName) {
                     // 파일명만 있는 경우 - 초록색 텍스트로 표시 (Save Point 87 방식)
                     const shortName = item.drawingFileName.substring(0, 15);
-                    drawingCell = `<span class="text-green-600 text-xs" title="${item.drawingFileName}">✓ ${shortName}...</span>`;
+                    drawingCell = `
+                        <div class="flex items-center justify-center space-x-1">
+                            <span class="text-green-600 text-xs" title="${item.drawingFileName}">✓ ${shortName}...</span>
+                            ${crossProjectBadge}
+                        </div>
+                    `;
                 } else {
                     // hasDrawing은 true인데 파일 정보가 없음
-                    drawingCell = `<span class="text-green-600 text-xs">✓ 연결됨</span>`;
+                    drawingCell = `
+                        <div class="flex items-center justify-center space-x-1">
+                            <span class="text-green-600 text-xs">✓ 연결됨</span>
+                            ${crossProjectBadge}
+                        </div>
+                    `;
                 }
             } else {
-                // 드로잉 없음
-                drawingCell = '<span class="text-gray-400 text-xs">없음</span>';
+                // 드로잉 없음 - 다른 프로젝트에 있는지만 확인
+                if (crossProjectBadge) {
+                    drawingCell = `
+                        <div class="flex items-center justify-center space-x-1">
+                            <span class="text-gray-400 text-xs">없음</span>
+                            ${crossProjectBadge}
+                        </div>
+                    `;
+                } else {
+                    drawingCell = '<span class="text-gray-400 text-xs">없음</span>';
+                }
             }
             
             // 🔥 디버깅: 드로잉이 있는 모든 항목의 상태 출력
