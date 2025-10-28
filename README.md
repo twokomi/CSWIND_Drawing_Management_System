@@ -1,15 +1,32 @@
-# CSWIND MTO 시스템 - Save Point 99
+# CSWIND MTO 시스템 - Save Point 100
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **🎉 최신 배포 (Save Point 99)**: https://f4ac8b52.cswind-mto.pages.dev
+- **🎉 최신 배포 (Save Point 100)**: https://055f3781.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
-- **프로젝트 관리**: 상단 네비게이션 "프로젝트 관리" 탭
 
-## ✅ 현재 완료된 기능 (Save Point 99 기준)
+## ✅ 현재 완료된 기능 (Save Point 100 기준)
+
+### 0. UI 단순화 - 프로젝트 관리 탭만 유지 ✅ (Save Point 100!)
+- **사용자 요청**: 헤더의 불필요한 탭들 제거
+- **수정 사항**:
+  - ❌ 대시보드 탭 제거
+  - ❌ BOM 분석 탭 제거
+  - ❌ 서플라이어 탭 제거
+  - ❌ PO 관리 탭 제거
+  - ✅ **프로젝트 관리 탭만 유지**
+- **결과**:
+  - 상단 네비게이션이 단순화되어 사용자 혼란 감소
+  - 페이지 로드 시 바로 프로젝트 관리 화면 표시
+  - 핵심 기능(프로젝트 생성, BOM 업로드, 드로잉 매칭)에 집중
+- **향후 확장성**:
+  - 다른 탭 컨텐츠는 코드에 유지되어 있음
+  - 필요시 네비게이션에 버튼만 추가하면 재활성화 가능
+
+## ✅ 현재 완료된 기능 (Save Point 98~100 통합)
 
 ### 0. 메인 네비게이션 탭 전환 수정 ✅ (CRITICAL FIX - Save Point 99!)
 - **발견된 문제**: 배포 환경에서 대시보드, 프로젝트 관리 등 메인 네비게이션 탭 전환 불가
