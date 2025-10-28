@@ -5,7 +5,7 @@
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **🎉 최신 배포 (Save Point 104)**: https://acbbfea4.cswind-mto.pages.dev
+- **🎉 최신 배포 (Save Point 104.1)**: https://866b526c.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 
 ## ✅ 현재 완료된 기능 (Save Point 104 기준)
@@ -14,10 +14,11 @@
 - **사용자 요청**: 드로잉 매칭 실패 아이템을 관리하고 고객사에 보고할 수 있는 기능 추가
 - **새로운 기능**:
   - ✅ **매칭 실패 아이템 자동 필터링**: E로 시작하는 도면번호 중 PDF가 매칭되지 않은 항목만 표시
+  - ✅ **도면번호 중복 제거** (Save Point 104.1): Number 기준으로 중복 제거하여 리뷰 시간 대폭 단축
   - ✅ **체크박스 다중 선택**: 도면이 불필요한 항목을 선택하여 제거 가능
   - ✅ **선택 삭제 기능**: 불필요한 항목을 BOM에서 완전히 제거
-  - ✅ **Excel 내보내기**: 최종 누락 도면 리스트를 CSV 파일로 내보내기
-  - ✅ **실시간 통계**: 매칭 실패 총 개수, 선택된 개수, 삭제 후 남을 개수 표시
+  - ✅ **Excel 내보내기**: 최종 누락 도면 리스트를 CSV 파일로 내보내기 (중복 제거 적용)
+  - ✅ **실시간 통계**: 고유 도면번호, 중복 제거된 개수, 선택된 개수, 삭제 후 남을 개수 (4개 통계)
   - ✅ **BOM 헤더 구조 유지**: Depth, Name, Number, Version 등 전체 컬럼 정보 포함
   - ✅ **UTF-8 BOM 인코딩**: Excel에서 한글 깨짐 없이 정상 표시
 - **사용 시나리오**:
@@ -630,7 +631,7 @@ debugDrawingMap();
 ---
 
 **최종 업데이트**: 2025-10-28
-**버전**: Save Point 104
+**버전**: Save Point 104.1
 **상태**: 운영 준비 완료 ✅
 
 ## 🎮 단축키 가이드
