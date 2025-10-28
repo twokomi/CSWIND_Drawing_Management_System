@@ -1,14 +1,29 @@
-# CSWIND MTO 시스템 - Save Point 100
+# CSWIND MTO 시스템 - Save Point 103
 
 ## 🎯 프로젝트 개요
 씨에스윈드 도면관리 & MTO (Make To Order) 자동화 시스템으로, Excel BOM 파일과 PDF 도면 파일을 자동으로 매칭하여 효율적인 도면 관리를 제공합니다.
 
 ## 🌐 접속 URL
 - **🌟 Production (Cloudflare Pages)**: https://cswind-mto.pages.dev
-- **🎉 최신 배포 (Save Point 102)**: https://6828a0e6.cswind-mto.pages.dev
+- **🎉 최신 배포 (Save Point 103)**: https://1564153c.cswind-mto.pages.dev
 - **개발 서버 (Sandbox)**: https://3000-i6ovkx4qstgf5tedcqtx9-a402f90a.sandbox.novita.ai
 
-## ✅ 현재 완료된 기능 (Save Point 100 기준)
+## ✅ 현재 완료된 기능 (Save Point 103 기준)
+
+### 0. 대시보드 및 디버깅 샘플 제거 ✅ (Save Point 103!)
+- **사용자 요청**: 불필요한 대시보드 통계 섹션과 디버깅용 샘플 프로젝트 완전 삭제
+- **수정 사항**:
+  - ❌ 대시보드 탭 컨텐츠 완전 제거 (통계 카드, 빠른 작업, 데이터 시각화)
+  - ❌ localStorage 초기화 코드 제거 (기존 프로젝트 보존)
+  - ❌ 디버깅용 샘플 프로젝트 생성 로직 제거 ("Excel 데이터 디버깅 프로젝트")
+  - ❌ setTimeout 기반 BOM/드로잉 시뮬레이션 코드 제거 (140+ 라인)
+- **결과**:
+  - 깔끔한 프로젝트 초기 화면 (빈 프로젝트 리스트)
+  - localStorage에 저장된 실제 프로젝트만 표시
+  - 불필요한 테스트 코드 제거로 코드 품질 향상
+  - 사용자가 직접 생성한 프로젝트만 관리
+
+## ✅ 현재 완료된 기능 (Save Point 100~102 통합)
 
 ### 0. UI 단순화 - 프로젝트 관리 탭만 유지 ✅ (Save Point 100!)
 - **사용자 요청**: 헤더의 불필요한 탭들 제거
@@ -588,7 +603,7 @@ debugDrawingMap();
 ---
 
 **최종 업데이트**: 2025-10-28
-**버전**: Save Point 90
+**버전**: Save Point 103
 **상태**: 운영 준비 완료 ✅
 
 ## 🎮 단축키 가이드
